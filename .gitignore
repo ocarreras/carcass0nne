@@ -1,0 +1,7 @@
+*.pyc
+*.pyo
+*.sqp
+*.swp
+__pycache__
+
+docs/
