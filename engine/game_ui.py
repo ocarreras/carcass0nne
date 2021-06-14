@@ -92,7 +92,6 @@ class Gui:
         self.canvas.create_image(x, y, anchor=NW, image=photo_image)
 
     def __draw_tile(self, coords, tile):
-        print(f"Rotation: {tile.rotation}")
         abs_file_path: str = os.path.join(self.images_path, tile.image)
         image = Image.open(abs_file_path).resize((self.tile_size, self.tile_size),
                                                  Image.ANTIALIAS).rotate(90 * tile.rotation)

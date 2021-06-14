@@ -20,7 +20,7 @@ class GameState:
             self.deck.extend([copy.copy(base_deck.tile_types[tile_type])
                               for _ in range(base_deck.tile_counts[tile_type])])
         random.shuffle(self.deck)
-        print(f"Deck size ${len(self.deck)}")
+        #print(f"Deck size {len(self.deck)}")
 
         # Board
         self.board = {(0, 0): base_deck.tile_types["D"]}
@@ -37,12 +37,13 @@ class GameState:
     def fits(self, coords, tile: Tile):
         assert(coords not in self.board)
 
+        debug = False
         coords_up = (coords[0] - 1, coords[1])
         if coords_up in self.board and \
                 self.board[coords_up].get_border(TileBorderOrientation.DOWN) != \
                 tile.get_border(TileBorderOrientation.UP):
             return False
-        if coords_up in self.board:
+        if debug and coords_up in self.board:
             print(f"UP: {self.board[coords_up].get_border(TileBorderOrientation.DOWN)} - {tile.get_border(TileBorderOrientation.UP)}")
 
         coords_down = (coords[0] + 1, coords[1])
@@ -50,7 +51,7 @@ class GameState:
                 self.board[coords_down].get_border(TileBorderOrientation.UP) != \
                 tile.get_border(TileBorderOrientation.DOWN):
             return False
-        if coords_down in self.board:
+        if debug and coords_down in self.board:
             print(f"DW: {self.board[coords_down].get_border(TileBorderOrientation.UP)} - {tile.get_border(TileBorderOrientation.DOWN)}")
 
         coords_right = (coords[0], coords[1] + 1)
@@ -58,7 +59,7 @@ class GameState:
                 self.board[coords_right].get_border(TileBorderOrientation.LEFT) != \
                 tile.get_border(TileBorderOrientation.RIGHT):
             return False
-        if coords_right in self.board:
+        if debug and coords_right in self.board:
             print(f"RG: {self.board[coords_right].get_border(TileBorderOrientation.LEFT)} - {tile.get_border(TileBorderOrientation.RIGHT)}")
 
         coords_left = (coords[0], coords[1] - 1)
@@ -66,12 +67,14 @@ class GameState:
                 self.board[coords_left].get_border(TileBorderOrientation.RIGHT) != \
                 tile.get_border(TileBorderOrientation.LEFT):
             return False
-        if coords_left in self.board:
+        if debug and coords_left in self.board:
             print(f"LF: {self.board[coords_left].get_border(TileBorderOrientation.RIGHT)} - {tile.get_border(TileBorderOrientation.LEFT)}")
         return True
 
     def insert_tile(self, coords, tile: Tile):
         assert coords not in self.board
+        assert coords in self.freeSquares
+
         self.freeSquares.remove(coords)
         self.board[coords] = tile
         coords_up = (coords[0] - 1, coords[1])
@@ -88,5 +91,5 @@ class GameState:
             self.freeSquares.append(coords_left)
 
         # self.freeSquares.sort()
-        random.shuffle(self.freeSquares)
+        # random.shuffle(self.freeSquares)
 
