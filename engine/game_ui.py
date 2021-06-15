@@ -3,7 +3,7 @@ from tkinter import *
 from tkinter import messagebox
 from engine.game_state import GameState
 from PIL import ImageTk, Image
-
+from PIL import ImageGrab
 
 class Gui:
     """
@@ -57,6 +57,22 @@ class Gui:
         self.canvas.pack(fill='both', expand=True)
         self.images_path = os.path.join('engine', 'resources', 'images')
         self.image_ref = []
+        self.save_images = []
+
+    def save_canvas_img(self):
+        #x = self.tk_root.winfo_rootx() + widget.winfo_x()
+        #y = self.tk_root.winfo_rooty() + widget.winfo_y()
+        #x1 = x + widget.winfo_width()
+        #y1 = y + widget.winfo_height()
+        #ImageGrab.grab().crop((x, y, x1, y1)).save("save_canvas.png")
+        self.canvas.postscript(file="save_canvas.eps")
+        img = Image.open("save_canvas.eps")
+        self.save_images.append((img))
+        if len(self.save_images)>0:
+            self.save_images[0].save("save_canvas.gif",
+                                     save_all=True, append_images=self.save_images[1:],
+                                     optimize=False,
+                                     duration=500, loop=0)
 
     def draw_game_state(self, game_state: GameState):
         self.canvas.delete('all')
@@ -79,11 +95,13 @@ class Gui:
         #    meeple_position: MeeplePosition
         #    for meeple_position in placed_meeples:
         #        self.__draw_meeple(player, meeple_position)
+
         self.canvas.update()
+        self.save_canvas_img()
 
     def __coords_to_pixels(self, coords):
-        return self.center_x + coords[1] * self.tile_size, \
-               self.center_y + coords[0] * self.tile_size
+        return self.center_x + coords.x * self.tile_size, \
+               self.center_y + coords.y * self.tile_size
 
     def __draw_square(self, coords, image):
         photo_image = ImageTk.PhotoImage(image)
@@ -94,7 +112,7 @@ class Gui:
     def __draw_tile(self, coords, tile):
         abs_file_path: str = os.path.join(self.images_path, tile.image)
         image = Image.open(abs_file_path).resize((self.tile_size, self.tile_size),
-                                                 Image.ANTIALIAS).rotate(90 * tile.rotation)
+                                                 Image.ANTIALIAS).rotate(-90 * tile.rotation)
         self.__draw_square(coords, image)
 
     def __draw_empty(self, coords):

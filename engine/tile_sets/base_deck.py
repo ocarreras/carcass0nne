@@ -1,102 +1,244 @@
 import os
+from engine.placement import EdgeOrientation
 from engine.tile import Tile, TileBorderType
+from engine.city import CityPlacement
+from engine.road import RoadPlacement, RoadConnection
+from engine.field import FieldPlacement, FieldConnection
 
 tile_types = {
     "A": Tile(
-        [TileBorderType.FIELD, TileBorderType.FIELD, TileBorderType.ROAD, TileBorderType.FIELD],
+        borders=[TileBorderType.FIELD, TileBorderType.FIELD, TileBorderType.ROAD, TileBorderType.FIELD],
+        city_placements=[],
+        road_placements=[RoadPlacement([RoadConnection.D],
+                                       termination=True)],
+        field_placements=[FieldPlacement([FieldConnection.UL, FieldConnection.UR, FieldConnection.RU,
+                                          FieldConnection.RD, FieldConnection.DL, FieldConnection.DR,
+                                          FieldConnection.LU, FieldConnection.LD],
+                                         city_connections=[])],
         image=os.path.join("base_game", "A.png")
     ),
     "B": Tile(
-        [TileBorderType.FIELD, TileBorderType.FIELD, TileBorderType.FIELD, TileBorderType.FIELD],
+        borders=[TileBorderType.FIELD, TileBorderType.FIELD, TileBorderType.FIELD, TileBorderType.FIELD],
+        city_placements=[],
+        road_placements=[],
+        field_placements=[FieldPlacement([FieldConnection.UL, FieldConnection.UR, FieldConnection.RU,
+                                          FieldConnection.RD, FieldConnection.DL, FieldConnection.DR,
+                                          FieldConnection.LU, FieldConnection.LD],
+                                         city_connections=[])],
         image=os.path.join("base_game", "B.png")
     ),
     "C": Tile(
-        [TileBorderType.CITY, TileBorderType.CITY, TileBorderType.CITY, TileBorderType.CITY],
+        borders=[TileBorderType.CITY, TileBorderType.CITY, TileBorderType.CITY, TileBorderType.CITY],
+        city_placements=[CityPlacement([EdgeOrientation.U, EdgeOrientation.D, EdgeOrientation.R, EdgeOrientation.L],
+                                       shield=True)],
+        field_placements=[],
+        road_placements=[],
         image=os.path.join("base_game", "C.png")
     ),
     "D": Tile(
-        [TileBorderType.CITY, TileBorderType.ROAD, TileBorderType.FIELD, TileBorderType.ROAD],
+        borders=[TileBorderType.CITY, TileBorderType.ROAD, TileBorderType.FIELD, TileBorderType.ROAD],
+        city_placements=[CityPlacement([EdgeOrientation.U],
+                                       shield=False)],
+        road_placements=[RoadPlacement([RoadConnection.R, RoadConnection.L],
+                                       termination=False)],
+        field_placements=[FieldPlacement([FieldConnection.RU, FieldConnection.LU],
+                                         city_connections=[0]),
+                          FieldPlacement([FieldConnection.RD, FieldConnection.LD],
+                                         city_connections=[])],
         image=os.path.join("base_game", "D.png")
     ),
     "E": Tile(
-        [TileBorderType.CITY, TileBorderType.FIELD, TileBorderType.FIELD, TileBorderType.FIELD],
+        borders=[TileBorderType.CITY, TileBorderType.FIELD, TileBorderType.FIELD, TileBorderType.FIELD],
+        city_placements=[CityPlacement([EdgeOrientation.U],
+                                       shield=False)],
+        road_placements=[],
+        field_placements=[FieldPlacement([FieldConnection.RU, FieldConnection.RD, FieldConnection.DL,
+                                          FieldConnection.DR, FieldConnection.LU, FieldConnection.LD],
+                                         city_connections=[0])],
         image=os.path.join("base_game", "E.png")
     ),
     "F": Tile(
-        [TileBorderType.FIELD, TileBorderType.CITY, TileBorderType.FIELD, TileBorderType.CITY],
+        borders=[TileBorderType.FIELD, TileBorderType.CITY, TileBorderType.FIELD, TileBorderType.CITY],
+        city_placements=[CityPlacement([EdgeOrientation.R, EdgeOrientation.L],
+                                       shield=True)],
+        road_placements=[],
+        field_placements=[FieldPlacement([FieldConnection.UL, FieldConnection.UR],
+                                         city_connections=[0]),
+                          FieldPlacement([FieldConnection.DL, FieldConnection.DR],
+                                         city_connections=[0]),
+                          ],
         image=os.path.join("base_game", "F.png")
     ),
     "G": Tile(
-        [TileBorderType.FIELD, TileBorderType.CITY, TileBorderType.FIELD, TileBorderType.CITY],
+        borders=[TileBorderType.FIELD, TileBorderType.CITY, TileBorderType.FIELD, TileBorderType.CITY],
+        city_placements=[CityPlacement([EdgeOrientation.R, EdgeOrientation.L],
+                                       shield=False)],
+        road_placements=[],
+        field_placements=[FieldPlacement([FieldConnection.UL, FieldConnection.UR],
+                                         city_connections=[0]),
+                          FieldPlacement([FieldConnection.DL, FieldConnection.DR],
+                                         city_connections=[0]),
+                          ],
         image=os.path.join("base_game", "G.png")
     ),
     "H": Tile(
-        [TileBorderType.CITY, TileBorderType.FIELD, TileBorderType.CITY, TileBorderType.FIELD],
+        borders=[TileBorderType.CITY, TileBorderType.FIELD, TileBorderType.CITY, TileBorderType.FIELD],
+        city_placements=[CityPlacement([EdgeOrientation.U],
+                                       shield=False),
+                         CityPlacement([EdgeOrientation.D],
+                                       shield=False)],
+        road_placements=[],
+        field_placements=[FieldPlacement([FieldConnection.RU, FieldConnection.RD,
+                                          FieldConnection.LU, FieldConnection.LD],
+                                         city_connections=[0, 1])
+                          ],
         image=os.path.join("base_game", "H.png")
     ),
     "I": Tile(
-        [ TileBorderType.CITY, TileBorderType.FIELD, TileBorderType.FIELD, TileBorderType.CITY],
+        borders=[TileBorderType.CITY, TileBorderType.FIELD, TileBorderType.FIELD, TileBorderType.CITY],
+        city_placements=[CityPlacement([EdgeOrientation.U],
+                                       shield=False),
+                         CityPlacement([EdgeOrientation.L],
+                                       shield=False)],
+        road_placements=[],
+        field_placements=[FieldPlacement([FieldConnection.RU, FieldConnection.RD,
+                                          FieldConnection.DL, FieldConnection.DR],
+                                         city_connections=[0, 1])
+                          ],
         image=os.path.join("base_game", "I.png")
     ),
     "J": Tile(
-        [TileBorderType.CITY, TileBorderType.ROAD, TileBorderType.ROAD, TileBorderType.FIELD],
+        borders=[TileBorderType.CITY, TileBorderType.ROAD, TileBorderType.ROAD, TileBorderType.FIELD],
+        city_placements=[CityPlacement([EdgeOrientation.U],
+                                       shield=False)],
+        road_placements=[RoadPlacement([RoadConnection.R, RoadConnection.D],
+                                       termination=False)],
+        field_placements=[FieldPlacement([FieldConnection.RU, FieldConnection.LU, FieldConnection.LD,
+                                          FieldConnection.DL],
+                                         city_connections=[0]),
+                          FieldPlacement([FieldConnection.RD, FieldConnection.DR],
+                                         city_connections=[]),
+                          ],
         image=os.path.join("base_game", "J.png")
     ),
     "K": Tile(
-        [TileBorderType.CITY, TileBorderType.FIELD, TileBorderType.ROAD, TileBorderType.ROAD],
+        borders=[TileBorderType.CITY, TileBorderType.FIELD, TileBorderType.ROAD, TileBorderType.ROAD],
+        city_placements=[CityPlacement([EdgeOrientation.U],
+                                       shield=False)],
+        road_placements=[RoadPlacement([RoadConnection.L, RoadConnection.D],
+                                       termination=False)],
         image=os.path.join("base_game", "K.png")
     ),
     "L": Tile(
-        [TileBorderType.CITY, TileBorderType.ROAD, TileBorderType.ROAD, TileBorderType.ROAD],
+        borders=[TileBorderType.CITY, TileBorderType.ROAD, TileBorderType.ROAD, TileBorderType.ROAD],
+        city_placements=[CityPlacement([EdgeOrientation.U],
+                                       shield=False)],
+        road_placements=[RoadPlacement([RoadConnection.R],
+                                       termination=True),
+                         RoadPlacement([RoadConnection.L],
+                                       termination=True),
+                         RoadPlacement([RoadConnection.D],
+                                       termination=True)],
         image=os.path.join("base_game", "L.png")
     ),
     "M": Tile(
-        [TileBorderType.CITY, TileBorderType.CITY, TileBorderType.FIELD, TileBorderType.FIELD],
+        borders=[TileBorderType.CITY, TileBorderType.CITY, TileBorderType.FIELD, TileBorderType.FIELD],
+        city_placements=[CityPlacement([EdgeOrientation.U, EdgeOrientation.R],
+                                       shield=True)],
+        road_placements=[],
         image=os.path.join("base_game", "M.png")
     ),
     "N": Tile(
-        [TileBorderType.CITY, TileBorderType.CITY, TileBorderType.FIELD, TileBorderType.FIELD],
+        borders=[TileBorderType.CITY, TileBorderType.CITY, TileBorderType.FIELD, TileBorderType.FIELD],
+        city_placements=[CityPlacement([EdgeOrientation.U, EdgeOrientation.R],
+                                       shield=False)],
+        road_placements=[],
         image=os.path.join("base_game", "N.png")
     ),
     "O": Tile(
-        [TileBorderType.CITY, TileBorderType.ROAD, TileBorderType.ROAD, TileBorderType.CITY],
+        borders=[TileBorderType.CITY, TileBorderType.ROAD, TileBorderType.ROAD, TileBorderType.CITY],
+        city_placements=[CityPlacement([EdgeOrientation.U, EdgeOrientation.L],
+                                       shield=True)],
+        road_placements=[RoadPlacement([RoadConnection.R, RoadConnection.D],
+                                       termination=False)],
         image=os.path.join("base_game", "O.png")
     ),
     "P": Tile(
-        [TileBorderType.CITY, TileBorderType.ROAD, TileBorderType.ROAD, TileBorderType.CITY],
+        borders=[TileBorderType.CITY, TileBorderType.ROAD, TileBorderType.ROAD, TileBorderType.CITY],
+        city_placements=[CityPlacement([EdgeOrientation.U, EdgeOrientation.L],
+                                       shield=False)],
+        road_placements=[RoadPlacement([RoadConnection.R, RoadConnection.D],
+                                       termination=False)],
         image=os.path.join("base_game", "P.png")
     ),
     "Q": Tile(
-        [TileBorderType.CITY, TileBorderType.CITY, TileBorderType.FIELD, TileBorderType.CITY],
+        borders=[TileBorderType.CITY, TileBorderType.CITY, TileBorderType.FIELD, TileBorderType.CITY],
+        city_placements=[CityPlacement([EdgeOrientation.U, EdgeOrientation.L, EdgeOrientation.R],
+                                       shield=True)],
+        road_placements=[],
         image=os.path.join("base_game", "Q.png")
     ),
     "R": Tile(
-        [TileBorderType.CITY, TileBorderType.CITY, TileBorderType.FIELD, TileBorderType.CITY],
+        borders=[TileBorderType.CITY, TileBorderType.CITY, TileBorderType.FIELD, TileBorderType.CITY],
+        city_placements=[CityPlacement([EdgeOrientation.U, EdgeOrientation.L, EdgeOrientation.R],
+                                       shield=False)],
+        road_placements=[],
         image=os.path.join("base_game", "R.png")
     ),
     "S": Tile(
-        [TileBorderType.CITY, TileBorderType.CITY, TileBorderType.ROAD, TileBorderType.CITY],
+        borders=[TileBorderType.CITY, TileBorderType.CITY, TileBorderType.ROAD, TileBorderType.CITY],
+        city_placements=[CityPlacement([EdgeOrientation.U, EdgeOrientation.L, EdgeOrientation.R],
+                                       shield=True)],
+        road_placements=[RoadPlacement([RoadConnection.D],
+                                       termination=True)],
         image=os.path.join("base_game", "S.png")
     ),
     "T": Tile(
-        [TileBorderType.CITY, TileBorderType.CITY, TileBorderType.ROAD, TileBorderType.CITY],
+        borders=[TileBorderType.CITY, TileBorderType.CITY, TileBorderType.ROAD, TileBorderType.CITY],
+        city_placements=[CityPlacement([EdgeOrientation.U, EdgeOrientation.L, EdgeOrientation.R],
+                                       shield=False)],
+        road_placements=[RoadPlacement([RoadConnection.D],
+                                       termination=True)],
         image=os.path.join("base_game", "T.png")
     ),
     "U": Tile(
-        [TileBorderType.ROAD, TileBorderType.FIELD, TileBorderType.ROAD, TileBorderType.FIELD],
+        borders=[TileBorderType.ROAD, TileBorderType.FIELD, TileBorderType.ROAD, TileBorderType.FIELD],
+        city_placements=[],
+        road_placements=[RoadPlacement([RoadConnection.U, RoadConnection.D],
+                                       termination=False)],
         image=os.path.join("base_game", "U.png")
     ),
     "V": Tile(
-        [TileBorderType.FIELD, TileBorderType.FIELD, TileBorderType.ROAD, TileBorderType.ROAD],
+        borders=[TileBorderType.FIELD, TileBorderType.FIELD, TileBorderType.ROAD, TileBorderType.ROAD],
+        city_placements=[],
+        road_placements=[RoadPlacement([RoadConnection.L, RoadConnection.D],
+                                       termination=False)],
         image=os.path.join("base_game", "V.png")
     ),
     "W": Tile(
-        [TileBorderType.FIELD, TileBorderType.ROAD, TileBorderType.ROAD, TileBorderType.ROAD],
-        image=os.path.join("base_game", "W.png")
+        borders=[TileBorderType.FIELD, TileBorderType.ROAD, TileBorderType.ROAD, TileBorderType.ROAD],
+        image=os.path.join("base_game", "W.png"),
+        city_placements=[],
+        road_placements=[RoadPlacement([RoadConnection.R],
+                                       termination=True),
+                         RoadPlacement([RoadConnection.L],
+                                       termination=True),
+                         RoadPlacement([RoadConnection.D],
+                                       termination=True)],
     ),
     "X": Tile(
-        [TileBorderType.ROAD, TileBorderType.ROAD, TileBorderType.ROAD, TileBorderType.ROAD],
-        image=os.path.join("base_game", "X.png")
+        borders=[TileBorderType.ROAD, TileBorderType.ROAD, TileBorderType.ROAD, TileBorderType.ROAD],
+        image=os.path.join("base_game", "X.png"),
+        city_placements=[],
+        road_placements=[RoadPlacement([RoadConnection.R],
+                                       termination=True),
+                         RoadPlacement([RoadConnection.L],
+                                       termination=True),
+                         RoadPlacement([RoadConnection.D],
+                                       termination=True),
+                         RoadPlacement([RoadConnection.U],
+                                       termination=True)
+                         ],
     ),
 }
 
