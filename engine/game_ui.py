@@ -2,44 +2,14 @@ import os
 from tkinter import *
 from tkinter import messagebox
 from engine.game_state import GameState
+from engine.placement import Placement
+from engine.coords import Coords
 from PIL import ImageTk, Image
 from PIL import ImageGrab
 
+# https://stackoverflow.com/questions/40658728/clickable-images-for-python
+
 class Gui:
-    """
-    meeple_icons = {
-        MeepleType.NORMAL: ["blue_meeple.png", "refrom tkd_meeple.png", "black_meeple.png", "yellow_meeple.png", "green_meeple.png", "pink_meeple.png"],
-        MeepleType.ABBOT: ["blue_abbot.png", "red_abbot.png", "black_abbot.png", "yellow_abbot.png", "green_abbot.png", "pink_abbot.png"]
-    }    
-    meeple_size = 15
-    big_meeple_size = 25
-    meeple_size = 15
-
-    meeple_position_offsVisualiserets = {
-        Side.TOP: (tile_size / 2, (meeple_size / 2) + 3),
-        Side.RIGHT: (tile_size - (meeple_size / 2) - 3, tile_size / 2),
-        Side.BOTTOM: (tile_size / 2, tile_size - (meeple_size / 2) - 3),
-        Side.LEFT: ((meeple_size / 2) + 3, tile_size / 2),
-        Side.CENTER: (tile_size / 2, tile_size / 2),
-        Side.TOP_LEFT: (tile_size / 4, (meeple_size / 2) + 3),
-        Side.TOP_RIGHT: ((tile_size / 4) * 3, (meeple_size / 2) + 3),
-        Side.BOTTOM_LEFT: (tile_size / 4, tile_size - (meeple_size / 2) - 3),
-        Side.BOTTOM_RIGHT: ((tile_size / 4) * 3, tile_size - (meeple_size / 2) - 3)
-    }
-
-    big_meeple_position_offsets = {
-        Side.TOP: (tile_size / 2, (big_meeple_size / 2) + 3),
-        Side.RIGHT: (tile_size - (big_meeple_size / 2) - 3, tile_size / 2),
-        Side.BOTTOM: (tile_size / 2, tile_size - (big_meeple_size / 2) - 3),
-        Side.LEFT: ((big_meeple_size / 2) + 3, tile_size / 2),
-        Side.CENTER: (tile_size / 2, tile_size / 2),
-        Side.TOP_LEFT: (tile_size / 4, (big_meeple_size / 2) + 3),Image.open(
-        Side.TOP_RIGHT: ((tile_size / 4) * 3, (big_meeple_size / 2) + 3),
-        Side.BOTTOM_LEFT: (tile_size / 4, tile_size - (big_meeple_size / 2) - 3),
-        Side.BOTTOM_RIGHT: ((tile_size / 4) * 3, tile_size - (big_meeple_size / 2) - 3)
-    }
-    """
-
     def on_closing(self):
         # if messagebox.askokcancel("Quit", "Do you want to quit?"):
         self.tk_root.destroy()
@@ -48,6 +18,7 @@ class Gui:
         self.canvas_width = 1800
         self.canvas_height = 1020
         self.tile_size = 60
+        self.meeple_size = 20
         self.tk_root = Tk()
 
         self.tk_root.protocol("WM_DELETE_WINDOW", self.on_closing)
@@ -56,19 +27,20 @@ class Gui:
         self.center_y = self.canvas_height/2 - self.tile_size/2
         self.canvas.pack(fill='both', expand=True)
         self.images_path = os.path.join('engine', 'resources', 'images')
+        self.meeple_images = []
+        for i in range(5):
+            abs_file_path: str = os.path.join(self.images_path, 'meeples', f"{str(i)}.png")
+            image = Image.open(abs_file_path).resize((self.meeple_size, self.meeple_size),
+                                                 Image.ANTIALIAS)
+            self.meeple_images.append(image)
         self.image_ref = []
         self.save_images = []
 
     def save_canvas_img(self):
-        #x = self.tk_root.winfo_rootx() + widget.winfo_x()
-        #y = self.tk_root.winfo_rooty() + widget.winfo_y()
-        #x1 = x + widget.winfo_width()
-        #y1 = y + widget.winfo_height()
-        #ImageGrab.grab().crop((x, y, x1, y1)).save("save_canvas.png")
         self.canvas.postscript(file="save_canvas.eps")
         img = Image.open("save_canvas.eps")
-        self.save_images.append((img))
-        if len(self.save_images)>0:
+        self.save_images.append(img)
+        if len(self.save_images) > 0:
             self.save_images[0].save("save_canvas.gif",
                                      save_all=True, append_images=self.save_images[1:],
                                      optimize=False,
@@ -77,83 +49,61 @@ class Gui:
     def draw_game_state(self, game_state: GameState):
         self.canvas.delete('all')
         self.image_ref = []
+        PhotoImage(master=self.canvas, width=self.canvas_width, height=self.canvas_height)
 
-        for coords in game_state.board.keys():
-            tile = game_state.board[coords]
+        for player in range(game_state.n_players):
+            self.canvas.create_text((0, player*20), text=f"Player {player:02d} : {game_state.scores[player]:03d} | {game_state.meeples[player]:02d}",
+                                    anchor=NW, fill='blue')
+
+        for coords in game_state.board.board.keys():
+            tile = game_state.board.board[coords]
             self.__draw_tile(coords, tile)
+            for placement in tile.cityPlacements:
+                if placement.meeple is not None:
+                    self.__draw_meeple(coords, placement.meeple_xy, tile.rotation, placement.meeple)
+            if tile.monasteryPlacement and tile.monasteryPlacement.meeple is not None:
+                self.__draw_meeple(coords, tile.monasteryPlacement.meeple_xy, tile.rotation,
+                                   tile.monasteryPlacement.meeple)
+            for placement in tile.roadPlacements:
+                if placement.meeple is not None:
+                    self.__draw_meeple(coords, placement.meeple_xy, tile.rotation, placement.meeple)
 
-        for coords in game_state.freeSquares:
+        for coords in game_state.board.freeSquares:
             self.__draw_empty(coords)
 
-        #for row_index, row in enumerate(game_state.board):Image.open(
-        #    for column_index, tile in enumerate(row):
-        #        tile: Tile
-        #        if tile is not None:
-        #            self.__draw_tile(column_index, row_index, tile)
-
-        #for player, placed_meeples in enumerate(game_state.placed_meeples):
-        #    meeple_position: MeeplePosition
-        #    for meeple_position in placed_meeples:
-        #        self.__draw_meeple(player, meeple_position)
-
         self.canvas.update()
-        self.save_canvas_img()
 
-    def __coords_to_pixels(self, coords):
+    def __coords_to_pixels(self, coords: Coords):
         return self.center_x + coords.x * self.tile_size, \
                self.center_y + coords.y * self.tile_size
 
-    def __draw_square(self, coords, image):
+    def __draw_square(self, coords: Coords, image):
         photo_image = ImageTk.PhotoImage(image)
         self.image_ref.append(photo_image)
         x, y = self.__coords_to_pixels(coords)
         self.canvas.create_image(x, y, anchor=NW, image=photo_image)
 
-    def __draw_tile(self, coords, tile):
+    def __draw_tile(self, coords: Coords, tile):
         abs_file_path: str = os.path.join(self.images_path, tile.image)
         image = Image.open(abs_file_path).resize((self.tile_size, self.tile_size),
                                                  Image.ANTIALIAS).rotate(-90 * tile.rotation)
+        self.image_ref.append(image)
         self.__draw_square(coords, image)
 
-    def __draw_empty(self, coords):
+    def __draw_empty(self, coords: Coords):
         abs_file_path: str = os.path.join(self.images_path, "Empty.png")
         image = Image.open(abs_file_path).resize((self.tile_size, self.tile_size),
                                                  Image.ANTIALIAS)
         self.__draw_square(coords, image)
 
-    """
-    def __draw_meeple(self, player_index: int, meeple_position: MeeplePosition):
-        image = self.__get_image(player=player_index, meeple_type=meeple_position.meeple_type)
-        self.image_ref.append(image)
-
-        if meeple_position.meeple_type == MeepleType.BIG:
-            x = meeple_position.coordinate_with_side.coordinate.column * self.tile_size + self.big_meeple_position_offsets[meeple_position.coordinate_with_side.side][0]
-            y = meeple_position.coordinate_with_side.coordinate.row * self.tile_size + self.big_meeple_position_offsets[meeple_position.coordinate_with_side.side][1]
-        else:
-            x = meeple_position.coordinate_with_side.coordinate.column * self.tile_size + self.meeple_position_offsets[meeple_position.coordinate_with_side.side][0]
-            y = meeple_position.coordinate_with_side.coordinate.row * self.tile_size + self.meeple_position_offsets[meeple_position.coordinate_with_side.side][1]
-
-        self.canvas.create_image(
-            x,
-            y,
-            anchor=CENTER,
-            image=image
-        )
-        
-    def __get_image(self, player: int, meeple_type: MeepleType):
-        icon_type = MeepleType.NORMAL
-        if meeple_type == MeepleType.ABBOT:
-            icon_type = meeple_type
-
-        image_filename = self.meeple_icons[icon_type][player]
-        abs_file_path = os.path.join(self.images_path, image_filename)
-
-        if meeple_type == MeepleType.NORMAL or meeple_type == MeepleType.ABBOT:
-            return ImageTk.PhotoImage(Image.open(abs_file_path).resize((self.meeple_size, self.meeple_size), Image.ANTIALIAS))
-        elif meeple_type == MeepleType.BIG:
-            return ImageTk.PhotoImage(Image.open(abs_file_path).resize((self.big_meeple_size, self.big_meeple_size), Image.ANTIALIAS))
-        elif meeple_type == MeepleType.FARMER:
-            return ImageTk.PhotoImage(Image.open(abs_file_path).resize((self.meeple_size, self.meeple_size), Image.ANTIALIAS).rotate(-90))
-        elif meeple_type == MeepleType.BIG_FARMER:
-            return ImageTk.PhotoImage(Image.open(abs_file_path).resize((self.big_meeple_size, self.big_meeple_size), Image.ANTIALIAS).rotate(-90))        
-    """
+    def __draw_meeple(self, coords: Coords, offsets, rotation, player):
+        image = self.meeple_images[player]
+        x, y = self.__coords_to_pixels(coords)
+        rotated_offsets = [offsets[0], offsets[1]]
+        for i in range(rotation):
+            rotated_offsets[0], rotated_offsets[1] = -rotated_offsets[1], rotated_offsets[0]
+        x = x + self.tile_size/2 - self.meeple_size/2 + rotated_offsets[0]
+        y = y + self.tile_size/2 - self.meeple_size/2 + rotated_offsets[1]
+        photo_image = ImageTk.PhotoImage(image)
+        self.image_ref.append(photo_image)
+        self.canvas.create_image(x, y, anchor=NW, image=photo_image)

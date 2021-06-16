@@ -10,6 +10,7 @@ class Game:
 
     def reset(self):
         self.state = GameState(self.n_players)
+        #self.gui = Gui()
 
     def render(self):
         self.gui.draw_game_state(self.state)

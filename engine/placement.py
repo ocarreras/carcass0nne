@@ -4,13 +4,12 @@ from engine.coords import Coords
 
 
 class Placement:
-    def __init__(self, meeple_xy=(0, 0)):
+    def __init__(self, meeple_xy=[0, 0]):
         self.meeple_xy = meeple_xy
         self.connections = None
+        self.meeple = None                  # id of a player or None
 
 
-##
-# TODO: Refactor all Connection enums.
 class EdgeOrientation(IntEnum):
     U = 0
     R = 1
