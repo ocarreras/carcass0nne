@@ -5,7 +5,7 @@ from engine.city import CityPlacement, City
 from engine.road import RoadPlacement, Road
 from engine.monastery import MonasteryPlacement
 from engine.coords import Coords
-from engine.placement import EdgeOrientation, Placement
+from engine.placement import EdgeConnection, Placement
 from engine.board import Board
 from engine.shape import Shape, ShapeType
 
@@ -14,7 +14,7 @@ import copy
 
 
 class GameState:
-    def __init__(self, n_players):
+    def __init__(self, n_players, debug=0):
         self.n_players = n_players
         self.current_player = 0
         self.deck: [Tile] = None
@@ -22,10 +22,10 @@ class GameState:
         self.scores: [int] = None
         self.meeples: [int] = None
         self.unfinished_shapes: Dict[ShapeType, list] = None
+        self.debug_level = 5
         self.initialize()
 
     def initialize(self):
-        print("INITIALIZE")
         self.scores = [0 for _ in range(self.n_players)]
         self.meeples = [7 for _ in range(self.n_players)]
         self.current_player = 0
@@ -50,6 +50,7 @@ class GameState:
         initial_tile.place(self.board, Coords(0, 0), 0, self.n_players)
         self.__insert_and_merge_shapes(ShapeType.CITY, initial_tile, initial_tile.coords)
         self.__insert_and_merge_shapes(ShapeType.ROAD, initial_tile, initial_tile.coords)
+        self.__insert_and_merge_shapes(ShapeType.FIELD, initial_tile, initial_tile.coords)
 
     ##
     # Get available tile placements.
@@ -83,13 +84,17 @@ class GameState:
                 self.meeples[placement.meeple] += 1
                 placement.meeple = None
         shape.reset_meeples(self.n_players)
+        if self.debug_level > 4:
+            print(f"REMOVE SHAPE - SCORE:{shape_type} :: {shape}")
         self.unfinished_shapes[shape_type].remove(shape)
 
     def __insert_and_merge_shapes(self, shape_type: ShapeType, tile: Tile, coords: Coords):
         for placement in tile.placements[shape_type]:
+            if self.debug_level > 4:
+                print(f"ADD SHAPE:{shape_type} :: {placement.shape}")
             self.unfinished_shapes[shape_type].append(placement.shape)
 
-            connection: EdgeOrientation
+            connection: EdgeConnection
             for connection in placement.connections:
                 merged_shape = self.board.get_connected_shape(shape_type, coords, connection)
                 if merged_shape:
@@ -98,18 +103,24 @@ class GameState:
                     completed = placement.shape.merge(merged_shape)
                     if completed:
                         self.__score_shape(shape_type, placement.shape)
+                    if self.debug_level > 4:
+                        print(f"REMOVE SHAPE - MERGE:{shape_type} :: {merged_shape}")
                     self.unfinished_shapes[shape_type].remove(merged_shape)
 
     def __update_monasteries(self, tile: Tile, coords: Coords):
         for monastery in self.unfinished_shapes[ShapeType.MONASTERY]:
             monastery_coords = monastery.coords
+            if monastery.coords == coords:
+                continue
 
-            if monastery_coords != coords and \
-                    abs(monastery_coords.x - coords.x) <= 1 and \
+            if abs(monastery_coords.x - coords.x) <= 1 and \
                     abs(monastery_coords.y - coords.y) <= 1:
                 monastery.inc_neighbours()
                 if monastery.completed:
                     self.__score_shape(ShapeType.MONASTERY, monastery)
+        for placement in tile.placements[ShapeType.MONASTERY]:
+            if placement.shape.completed:
+                self.__score_shape(ShapeType.MONASTERY, placement.shape)
 
     def __insert_meeple(self, tile: Tile, placement: Placement):
         if not placement:
@@ -119,8 +130,8 @@ class GameState:
         placement.shape.meeples[self.current_player] += 1
 
     def insert_tile(self, coords: Coords, tile: Tile, rotation: int, placement: Placement):
-        print("INSERT_TILE")
-        print(f"(\"{tile.tile_name}\", ({coords.y}, {coords.x}), {rotation}),")
+        if self.debug_level > 0:
+            print(f"(\"{tile.tile_name}\", ({coords.y}, {coords.x}), {rotation}),")
 
         tile.place(self.board, coords, rotation, self.n_players)
         self.board.insert_tile(coords, tile)
@@ -131,16 +142,28 @@ class GameState:
         self.__insert_and_merge_shapes(ShapeType.CITY, tile, coords)
         self.__insert_and_merge_shapes(ShapeType.ROAD, tile, coords)
         self.__insert_and_merge_shapes(ShapeType.MONASTERY, tile, coords)
+        self.__insert_and_merge_shapes(ShapeType.FIELD, tile, coords)
         self.__update_monasteries(tile, coords)
 
         self.current_player = (self.current_player + 1) % self.n_players
 
-    def __print_city_list(self):
-        print("City list")
+    def print_open_shapes(self):
+        print("OPEN SHAPES")
+        print(f"[[ CITY LIST      : {len(self.unfinished_shapes[ShapeType.CITY]):03d}]]")
         for city in self.unfinished_shapes[ShapeType.CITY]:
-            if not city.completed:
-                city.print()
-
+            assert not city.completed
+            city.print()
+        print(f"[[ ROAD LIST      : {len(self.unfinished_shapes[ShapeType.ROAD]):03d}]]")
+        for road in self.unfinished_shapes[ShapeType.ROAD]:
+            assert not road.completed
+            road.print()
+        print(f"[[ MONASTERY LIST : {len(self.unfinished_shapes[ShapeType.MONASTERY]):03d} ]]")
+        for monastery in self.unfinished_shapes[ShapeType.MONASTERY]:
+            assert not monastery.completed
+            monastery.print()
+        print(f"[[ FIELD LIST     : {len(self.unfinished_shapes[ShapeType.FIELD]):03d} ]]")
+        for field in self.unfinished_shapes[ShapeType.FIELD]:
+            field.print()
     ##
     # TODO: Two road placements could connect to the same road. These two placements would give the same outcome
     #       Needs Fix to improve search.
@@ -164,15 +187,15 @@ class GameState:
         return placements
 
     ##
-    # Return a list of unique city actions:
+    # Return a list of unique city placements:
     #
-    # - If two placements connect to the same city, return only one action.
+    # - If two placements connect to the same city, return only one.
     # - All connected cities must be empty.
     #
     # There are some difficulties if we want to do this before tile placement, thus before merging cities.
     #
     # For instance, tiles similar to "EP" on inns and cathedrals could merge a city that
-    # initially didn't have meeples with a city that has:
+    # initially didn't have meeples with one that has:
     #
     #   ABC    B   : city w Meeple
     #   DEF    FHI : city w/o Meeple

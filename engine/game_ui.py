@@ -9,6 +9,7 @@ from PIL import ImageGrab
 
 # https://stackoverflow.com/questions/40658728/clickable-images-for-python
 
+
 class Gui:
     def on_closing(self):
         # if messagebox.askokcancel("Quit", "Do you want to quit?"):
@@ -68,7 +69,7 @@ class Gui:
             self.__draw_empty(coords)
 
         self.canvas.update()
-        self.save_canvas_img()
+        # self.save_canvas_img()
 
     def __coords_to_pixels(self, coords: Coords):
         return self.center_x + coords.x * self.tile_size, \

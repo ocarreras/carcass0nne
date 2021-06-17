@@ -4,9 +4,8 @@ from engine.game import Game
 from engine.tile import Tile
 
 def do_main(game):
-
-    while len(game.state.deck) > 0:
-    #for i in range(20):
+    #while len(game.state.deck) > 0:
+    for j in range(10):
         tile: Tile = game.get_new_tile()
         tile_placements = game.state.get_available_tile_placements(tile)
         if len(tile_placements) == 0:
@@ -19,13 +18,12 @@ def do_main(game):
         game.state.insert_tile(coords, tile, rotation, meeple_placement)
         game.render()
         #time.sleep(0.5)
-    #game.gui.tk_root.mainloop()
-
+    game.state.print_open_shapes()
+    game.gui.tk_root.mainloop()
 
 if __name__ == "__main__":
-    game = Game()
+    game = Game(create_ui=True)
 
-    for i in range(20):
+    for i in range(1):
         game.start()
         do_main(game)
-        print(i)

@@ -1,12 +1,12 @@
 from typing import Dict
 
+from collections.abc import MutableMapping
 from engine.coords import Coords
 from engine.tile import Tile
-from engine.placement import EdgeOrientation
-from engine.city import City, CityPlacement
-from engine.road import Road, RoadPlacement
+from engine.placement import EdgeConnection, BorderOrientation
+from engine.city import City
+from engine.road import Road
 from engine.placement import Placement
-from collections.abc import MutableMapping
 from engine.shape import Shape, ShapeType
 
 
@@ -28,51 +28,67 @@ class Board(MutableMapping):
         assert (coords not in self.board)
 
         if coords.up() in self.board and \
-                self.board[coords.up()].get_border(EdgeOrientation.D) != \
-                tile.get_rotated_border(EdgeOrientation.U, rotation):
+                self.board[coords.up()].get_border(BorderOrientation.D) != \
+                tile.get_rotated_border(BorderOrientation.U, rotation):
             return False
         if coords.down() in self.board and \
-                self.board[coords.down()].get_border(EdgeOrientation.U) != \
-                tile.get_rotated_border(EdgeOrientation.D, rotation):
+                self.board[coords.down()].get_border(BorderOrientation.U) != \
+                tile.get_rotated_border(BorderOrientation.D, rotation):
             return False
         if coords.right() in self.board and \
-                self.board[coords.right()].get_border(EdgeOrientation.L) != \
-                tile.get_rotated_border(EdgeOrientation.R, rotation):
+                self.board[coords.right()].get_border(BorderOrientation.L) != \
+                tile.get_rotated_border(BorderOrientation.R, rotation):
             return False
         if coords.left() in self.board and \
-                self.board[coords.left()].get_border(EdgeOrientation.R) != \
-                tile.get_rotated_border(EdgeOrientation.L, rotation):
+                self.board[coords.left()].get_border(BorderOrientation.R) != \
+                tile.get_rotated_border(BorderOrientation.L, rotation):
             return False
         return True
 
-    def __get_connected_placement(self, shape_type: ShapeType, coords: Coords, connection: EdgeOrientation) \
+    def __get_connected_placement(self, shape_type: ShapeType, coords: Coords, connection: EdgeConnection) \
             -> Placement:
-        if connection == EdgeOrientation.U:
+        if connection == EdgeConnection.UR:
             if coords.up() in self.board:
-                return self.board[coords.up()].connections[shape_type][EdgeOrientation.D]
+                return self.board[coords.up()].connections[shape_type][EdgeConnection.DR]
             return None
-        if connection == EdgeOrientation.D:
+        if connection == EdgeConnection.UL:
+            if coords.up() in self.board:
+                return self.board[coords.up()].connections[shape_type][EdgeConnection.DL]
+            return None
+        if connection == EdgeConnection.DL:
             if coords.down() in self.board:
-                return self.board[coords.down()].connections[shape_type][EdgeOrientation.U]
+                return self.board[coords.down()].connections[shape_type][EdgeConnection.UL]
             return None
-        if connection == EdgeOrientation.R:
+        if connection == EdgeConnection.DR:
+            if coords.down() in self.board:
+                return self.board[coords.down()].connections[shape_type][EdgeConnection.UR]
+            return None
+        if connection == EdgeConnection.RU:
             if coords.right() in self.board:
-                return self.board[coords.right()].connections[shape_type][EdgeOrientation.L]
+                return self.board[coords.right()].connections[shape_type][EdgeConnection.LU]
             return None
-        if connection == EdgeOrientation.L:
+        if connection == EdgeConnection.RD:
+            if coords.right() in self.board:
+                return self.board[coords.right()].connections[shape_type][EdgeConnection.LD]
+            return None
+        if connection == EdgeConnection.LD:
             if coords.left() in self.board:
-                return self.board[coords.left()].connections[shape_type][EdgeOrientation.R]
+                return self.board[coords.left()].connections[shape_type][EdgeConnection.RD]
+            return None
+        if connection == EdgeConnection.LU:
+            if coords.left() in self.board:
+                return self.board[coords.left()].connections[shape_type][EdgeConnection.RU]
             return None
 
-    def get_connected_city(self, coords: Coords, connection: EdgeOrientation) -> City:
+    def get_connected_city(self, coords: Coords, connection: EdgeConnection) -> City:
         placement = self.__get_connected_placement(ShapeType.CITY, coords, connection)
         return placement.shape if placement else None
 
-    def get_connected_road(self, coords: Coords, connection: EdgeOrientation) -> Road:
+    def get_connected_road(self, coords: Coords, connection: EdgeConnection) -> Road:
         placement = self.__get_connected_placement(ShapeType.ROAD, coords, connection)
         return placement.shape if placement else None
 
-    def get_connected_shape(self, shape_type: ShapeType, coords: Coords, connection: EdgeOrientation) -> Shape:
+    def get_connected_shape(self, shape_type: ShapeType, coords: Coords, connection: EdgeConnection) -> Shape:
         placement = self.__get_connected_placement(shape_type, coords, connection)
         return placement.shape if placement else None
 

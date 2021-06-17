@@ -1,6 +1,6 @@
 from __future__ import annotations
 from enum import Enum
-from engine.placement import Placement, Edge, EdgeOrientation
+from engine.placement import Placement, Edge
 
 
 class ShapeType(Enum):

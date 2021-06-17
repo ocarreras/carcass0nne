@@ -3,17 +3,19 @@ from engine.game_ui import Gui
 
 
 class Game:
-    def __init__(self, n_players=2):
+    def __init__(self, n_players=2, create_ui=True):
         self.n_players = n_players
         self.state = None
-        self.gui = Gui()
+        self.gui = None
+        if create_ui:
+            self.gui = Gui()
 
     def start(self):
         self.state = GameState(self.n_players)
-        #self.gui = Gui()
 
     def render(self):
-        self.gui.draw_game_state(self.state)
+        if self.gui:
+            self.gui.draw_game_state(self.state)
 
     def get_new_tile(self):
         return self.state.deck.pop()

@@ -4,6 +4,7 @@ from engine.tile_sets.base_deck import tile_types
 from engine.coords import Coords
 from engine.game_state import GameState
 from engine.game_ui import Gui
+from engine.shape import Shape, ShapeType
 import copy
 
 
@@ -28,47 +29,42 @@ def insert_tiles(tiles, gs=None):
     for tile in tiles:
         insert_tile(gs, *tile)
     return gs
-
 """
-def test_dummy():
+##
+# Create road donut and complete it with a single tile while scoring.
+def test_road_connection():
+    gs = GameState(2)
     test_tile_info = [
-        ("T", (-1, 0), 1),
-        ("O", (0, 1), 1),
+        ("V", (0, 1), 0),
+        ("V", (1, 1), 1),
+        ("V", (0, -1), 3),
+        ("V", (1, -1), 2),
+        ("U", (1, 0), 1),
     ]
-    gs = insert_tiles(test_tile_info)
-    for city in gs.cities:
-        city.print()
+    insert_tiles(test_tile_info, gs)
+    print("UNFINISHED ROADS")
+    for road in gs.unfinished_shapes[ShapeType.ROAD]:
+        road.print()
     render_loop(gs)
 """
 
-def test_create_city_1():
-    test_tile_info = [
-        ("D", (-1, 0), 2),
-    ]
-    gs = insert_tiles(test_tile_info)
-
-    placements = gs.board.board[Coords(-1, 0)].cityPlacements
-    gs.board.board[Coords(-1, 0)].meeplePlacement = placements[0]
-    gs.board.board[Coords(-1, 0)].meeplePlayer = 0
-    render_loop(gs)
-    assert len(gs.cities) == 0
 
 def test_autocompleted_city():
     gs = GameState(2)
     tile = copy.deepcopy(tile_types["D"])
+    for road in gs.unfinished_shapes[ShapeType.ROAD]:
+        road.print()
     tile_placements = gs.get_available_tile_placements(tile)
     assert (Coords(-1, 0), 2) in tile_placements
     meeple_placements = gs.get_available_meeple_placements(tile, Coords(-1, 0), 2)
-    assert tile.cityPlacements[0] in meeple_placements
-    gs.insert_tile(Coords(-1, 0), tile, 2, tile.cityPlacements[0])
+    assert tile.placements[ShapeType.CITY][0] in meeple_placements
+    gs.insert_tile(Coords(-1, 0), tile, 2, tile.placements[ShapeType.CITY][0])
     assert gs.scores[0] == 4
     assert gs.meeples[0] == gs.meeples[1]
-    assert tile.cityPlacements[0].meeple is None
+    assert tile.placements[ShapeType.CITY][0].meeple is None
 
-##
-# Place - autocomplete
-def test_autocompleted_monastery():
-    gs = GameState(2)
+
+def create_monastery_donut(gs):
     test_tile_info = [
         ("D", (0, 1), 0),
         ("E", (1, 1), 1),
@@ -78,69 +74,83 @@ def test_autocompleted_monastery():
         ("E", (1, -1), 3),
         ("V", (0, -1), 2),
     ]
-    gs = insert_tiles(test_tile_info)
+    insert_tiles(test_tile_info, gs)
+
+
+def test_autocompleted_monastery():
+    gs = GameState(2)
+    create_monastery_donut(gs)
     tile = copy.deepcopy(tile_types["B"])
     tile_placements = gs.get_available_tile_placements(tile)
     assert (Coords(1, 0), 0) in tile_placements
     meeple_placements = gs.get_available_meeple_placements(tile, Coords(1, 0), 0)
-    assert tile.monasteryPlacement in meeple_placements
-    gs.insert_tile(Coords(1, 0), tile, 0, tile.monasteryPlacement)
-    assert gs.scores[1] == 8
+    monastery_placement = tile.placements[ShapeType.MONASTERY][0]
+    assert monastery_placement in meeple_placements
+    gs.insert_tile(Coords(1, 0), tile, 0, monastery_placement)
+    assert gs.scores[1] == 9
     assert gs.scores[0] == 0
     assert gs.meeples[0] == gs.meeples[1]
-    assert tile.monasteryPlacement.meeple is None
+    assert monastery_placement.meeple is None
+    gs.print_open_shapes()
+    render_loop(gs)
 
 def test_monastery_completion():
     gs = GameState(2)
     tile = copy.deepcopy(tile_types["B"])
-    tile_placements = gs.get_available_tile_placements(tile)
-    assert (Coords(1, 0), 0) in tile_placements
     meeple_placements = gs.get_available_meeple_placements(tile, Coords(1, 0), 0)
-    assert tile.monasteryPlacement in meeple_placements
-    gs.insert_tile(Coords(1, 0), tile, 0, tile.monasteryPlacement)
-    test_tile_info = [
-        ("D", (0, 1), 0),
-        ("E", (1, 1), 1),
-        ("E", (2, 1), 1),
-        ("E", (2, 0), 2),
-        ("E", (2, -1), 3),
-        ("E", (1, -1), 3),
-        ("V", (0, -1), 2),
-    ]
-    gs = insert_tiles(test_tile_info, gs)
-    assert gs.scores[0] == 8
+    monastery_placement = tile.placements[ShapeType.MONASTERY][0]
+    assert monastery_placement in meeple_placements
+    gs.insert_tile(Coords(1, 0), tile, 0, monastery_placement)
+    create_monastery_donut(gs)
+    assert gs.scores[0] == 9
     assert gs.scores[1] == 0
     assert gs.meeples[0] == gs.meeples[1]
-    assert tile.monasteryPlacement.meeple is None
+    assert monastery_placement.meeple is None
 
-"""
-def test_available_city_actions():
+
+##
+# Create road donut and complete it with a single tile while scoring.
+def test_autocomplete_road():
+    gs = GameState(2)
     test_tile_info = [
-        ("K", (-1, 0), 2),
-        ("O", (0, 1), 1),
-        ("U", (1, 0), 1),
-        ("X", (0, -1), 0),
-        ("W", (-2, 0), 0),
-        ("U", (-1, -1), 0),
-        ("F", (0, 2), 0),
-        ("S", (-1, 1), 1),
+        ("V", (0, 1), 0),
+        ("V", (1, 1), 1),
+        ("V", (0, -1), 3),
+        ("V", (1, -1), 2),
     ]
-    gs = insert_tiles(test_tile_info)
-    for city in gs.cities:
-        city.print()
+    insert_tiles(test_tile_info, gs)
+    tile = copy.deepcopy(tile_types["U"])
+    road_placement = tile.placements[ShapeType.ROAD][0]
+    tile_placements = gs.get_available_tile_placements(tile)
+    assert (Coords(1, 0), 1) in tile_placements
+    meeple_placements = gs.get_available_meeple_placements(tile, Coords(1, 0), 0)
+    assert road_placement in meeple_placements
+    gs.insert_tile(Coords(1, 0), tile, 1, road_placement)
+    assert gs.scores[0] == 6
+    assert gs.scores[1] == 0
+    assert gs.meeples[0] == gs.meeples[1]
+    assert road_placement.meeple is None
 
-    render_loop(gs)
-    
 
-"""
-"""
-def test_incomplete_cities():
+##
+# Place meeple in a road and complete it doing a circle/donut.
+def test_road_completion():
+    gs = GameState(2)
+    tile = copy.deepcopy(tile_types["V"])
+    tile_placements = gs.get_available_tile_placements(tile)
+    road_placement = tile.placements[ShapeType.ROAD][0]
+    assert (Coords(0, 1), 0) in tile_placements
+    meeple_placements = gs.get_available_meeple_placements(tile, Coords(0, 1), 0)
+    assert road_placement in meeple_placements
+    gs.insert_tile(Coords(0, 1), tile, 0, road_placement)
     test_tile_info = [
-        ("R", (1, 0), 2),
-        ("N", (2, 0), 0),
-        ("O", (1, 1), 3),
-        ("D", (1, -1), 1)]
-    gs = insert_tiles(test_tile_info)
-    render_loop(gs)
-    assert len(gs.cities) == 2
-"""
+        ("V", (1, 1), 1),
+        ("V", (0, -1), 3),
+        ("V", (1, -1), 2),
+        ("U", (1, 0), 1)
+    ]
+    insert_tiles(test_tile_info, gs)
+    assert gs.scores[0] == 6
+    assert gs.scores[1] == 0
+    assert gs.meeples[0] == gs.meeples[1]
+    assert road_placement.meeple is None

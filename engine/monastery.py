@@ -8,7 +8,6 @@ class Monastery(Shape):
     def __init__(self, placement: MonasteryPlacement, coords, n_players):
         super().__init__(placement, coords, n_players)
         self.neighbours = 0
-        self.coords = coords
 
     def initialize(self, board, coords: Coords):
         if coords.up() in board:
@@ -38,6 +37,12 @@ class Monastery(Shape):
     def score(self):
         return self.neighbours + 1
 
+    def __str__(self):
+        return f"MONASTERY {hex(id(self))} {self.coords} #{self.neighbours:02d} " + \
+               ("COMPLETED" if self.completed else "OPEN")
+
+    def print(self):
+        print(self)
 
 class MonasteryPlacement(Placement):
     def __init__(self, meeple_xy):

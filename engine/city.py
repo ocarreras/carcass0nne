@@ -1,17 +1,15 @@
 from __future__ import annotations
-from engine.placement import Placement, Edge, EdgeOrientation
+from engine.placement import Placement, Edge, EdgeConnection
 from engine.shape import Shape
 
 
 class CityPlacement(Placement):
-    def __init__(self, connections: [EdgeOrientation], shield=None, meeple_xy=None):
+    def __init__(self, connections: [EdgeConnection], shield=None, meeple_xy=None):
         super().__init__(meeple_xy)
-        self.connections: [EdgeOrientation] = connections
+        self.connections: [EdgeConnection] = connections
+        super(CityPlacement, self).duplicate_connections()
         self.score: int = 2 if shield else 1
         self.shape: City = None
-
-    def initialize(self, rotation: int):
-        self.connections = list(map(lambda c: EdgeOrientation((c+rotation) % 4), self.connections))
 
     def __str__(self):
         return f"CITY :: {list(map(lambda l: l.name, self.connections))}"
