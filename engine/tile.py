@@ -61,7 +61,7 @@ class Tile:
             roadPlacement.shape = Road(roadPlacement, coords, n_players)
         for fieldPlacement in self.placements[ShapeType.FIELD]:
             fieldPlacement: FieldPlacement
-            fieldPlacement.initialize(self.rotation)
+            fieldPlacement.initialize_field(self.rotation, self.placements[ShapeType.CITY])
             fieldPlacement.shape = Field(fieldPlacement, coords, n_players)
 
     ##

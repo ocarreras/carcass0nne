@@ -14,9 +14,10 @@ class Placement:
         self.connections = list(map(lambda c: EdgeConnection((c + rotation * 2) % 8), self.connections))
 
     ##
-    # Duplicate connections for city/roads.
-    # We initially only set LD/DL/UL/RU and we need to add the other parity to keep connectivity.
-    # Lleig, Hackish.
+    # Uggly!
+    #
+    # Duplicate connections for city/roads so we can use the same connectivity functions.
+    # We initially only set LD/DL/UL/RU and we need to add the other parities to keep connectivity.
     def duplicate_connections(self):
         new_connections = copy.copy(self.connections)
         for connection in self.connections:

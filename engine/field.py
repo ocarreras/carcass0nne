@@ -1,6 +1,6 @@
 from __future__ import annotations
-from enum import Enum
 from engine.placement import Placement, EdgeConnection
+from engine.city import CityPlacement
 from engine.shape import Shape
 
 
@@ -11,6 +11,12 @@ class FieldPlacement(Placement):
         super().__init__(meeple_xy)
         self.connections = connections
         self.cityConnections = city_connections
+        self.cityPlacements = set()
+
+    def initialize_field(self, rotation: int, city_placements: [CityPlacement]):
+        super(FieldPlacement, self).initialize(rotation)
+        for cityConnection in self.cityConnections:
+            self.cityPlacements.add(city_placements[cityConnection])
 
     def __str__(self):
         return f"FIELD :: {list(map(lambda l: l.name, self.connections))}"
@@ -22,13 +28,22 @@ class FieldPlacement(Placement):
 class Field(Shape):
     def __init__(self, placement: FieldPlacement, coords, n_players):
         super().__init__(placement, coords, n_players)
+        self.cityPlacements = placement.cityPlacements
 
     def score(self):
-        return len(self.placements)
+        return sum(map(lambda c: 4 if c.completed else 0, self.adjacent_cities()))
 
-    def merge(self, merged_field):
+    def merge(self, merged_field: FieldPlacement):
         super(Field, self).merge(merged_field)
         self.completed = False
+        for placement in merged_field.cityPlacements:
+            self.cityPlacements.add(placement)
+
+    def adjacent_cities(self):
+        cities = set()
+        for placement in self.cityPlacements:
+            cities.add(placement.shape)
+        return list(cities)
 
     def __str__(self):
         return f"FIELD {hex(id(self))} {self.coords} #{len(self.placements):02d} "

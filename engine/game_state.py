@@ -3,6 +3,7 @@ from engine.tile_sets import base_deck
 from engine.tile import Tile
 from engine.city import CityPlacement, City
 from engine.road import RoadPlacement, Road
+from engine.field import FieldPlacement, Field
 from engine.monastery import MonasteryPlacement
 from engine.coords import Coords
 from engine.placement import EdgeConnection, Placement
@@ -20,13 +21,17 @@ class GameState:
         self.deck: [Tile] = None
         self.board: Board = None
         self.scores: [int] = None
+        self.score_types: Dict[ShapeType, Dict[int, int]] = None
         self.meeples: [int] = None
         self.unfinished_shapes: Dict[ShapeType, list] = None
-        self.debug_level = 5
+        self.debug_level = 0
         self.initialize()
 
     def initialize(self):
         self.scores = [0 for _ in range(self.n_players)]
+        self.score_types = {}
+        for shape_type in ShapeType:
+            self.score_types[shape_type] = [0 for _ in range(self.n_players)]
         self.meeples = [7 for _ in range(self.n_players)]
         self.current_player = 0
         self.unfinished_shapes = {
@@ -52,6 +57,20 @@ class GameState:
         self.__insert_and_merge_shapes(ShapeType.ROAD, initial_tile, initial_tile.coords)
         self.__insert_and_merge_shapes(ShapeType.FIELD, initial_tile, initial_tile.coords)
 
+    def calc_final_score(self):
+        for shape_type in ShapeType:
+            while len(self.unfinished_shapes[shape_type]) > 0:
+                unfinished_shape = self.unfinished_shapes[shape_type][0]
+                self.__score_shape(shape_type, unfinished_shape)
+
+    def print_score(self):
+        print("[[ SCORES ]]")
+        for player_num in range(self.n_players):
+            print(f"Player: {player_num:02d}")
+            print(f"\tSCORE: {self.scores[player_num]}")
+            for shape_type in ShapeType:
+                print(f"\t\t{shape_type.name:10}: {self.score_types[shape_type][player_num]}")
+
     ##
     # Get available tile placements.
     def get_available_tile_placements(self, tile: Tile) -> [(Coords, int)]:
@@ -72,26 +91,30 @@ class GameState:
         placements.extend(self.__get_city_meeple_placements(tile, coords, rotation))
         placements.extend(tile.placements[ShapeType.MONASTERY])
         placements.extend(self.__get_road_meeple_placements(tile, coords, rotation))
+        placements.extend(self.__get_field_meeple_placements(tile, coords, rotation))
         return placements
 
     def __score_shape(self, shape_type: ShapeType, shape: Shape):
         score = shape.score()
         winners = shape.winners()
         for winner in winners:
+            if self.debug_level > 2:
+                print(f"SCORING: {shape_type} :: {score} -> {winner}")
             self.scores[winner] += score
+            self.score_types[shape_type][winner] += score
         for placement in shape.placements:
             if placement.meeple is not None:
                 self.meeples[placement.meeple] += 1
                 placement.meeple = None
         shape.reset_meeples(self.n_players)
         if self.debug_level > 4:
-            print(f"REMOVE SHAPE - SCORE:{shape_type} :: {shape}")
+            print(f"REMOVE SHAPE @ SCORE :: {shape_type} :: {shape}")
         self.unfinished_shapes[shape_type].remove(shape)
 
     def __insert_and_merge_shapes(self, shape_type: ShapeType, tile: Tile, coords: Coords):
         for placement in tile.placements[shape_type]:
             if self.debug_level > 4:
-                print(f"ADD SHAPE:{shape_type} :: {placement.shape}")
+                print(f"ADD SHAPE :: {shape_type} :: {placement.shape}")
             self.unfinished_shapes[shape_type].append(placement.shape)
 
             connection: EdgeConnection
@@ -104,7 +127,7 @@ class GameState:
                     if completed:
                         self.__score_shape(shape_type, placement.shape)
                     if self.debug_level > 4:
-                        print(f"REMOVE SHAPE - MERGE:{shape_type} :: {merged_shape}")
+                        print(f"REMOVE SHAPE @ MERGE :: {shape_type} :: {merged_shape}")
                     self.unfinished_shapes[shape_type].remove(merged_shape)
 
     def __update_monasteries(self, tile: Tile, coords: Coords):
@@ -164,6 +187,30 @@ class GameState:
         print(f"[[ FIELD LIST     : {len(self.unfinished_shapes[ShapeType.FIELD]):03d} ]]")
         for field in self.unfinished_shapes[ShapeType.FIELD]:
             field.print()
+            print(f"\tScore: {field.score()}")
+            print("\tAdjacent cities")
+            for city in field.adjacent_cities():
+                print(f"\t\t{city}")
+
+    ##
+    # TODO: Experimental
+    def __get_field_meeple_placements(self, tile: Tile, coords: Coords, rotation: int) -> [FieldPlacement]:
+        placements = []
+
+        for placement in tile.placements[ShapeType.FIELD]:
+            empty = True
+            for connection in placement.connections:
+                connected_road = self.board.get_connected_shape(ShapeType.FIELD, coords, (connection + rotation*2) % 8)
+                if not connected_road:
+                    continue
+                n_meeples = sum(connected_road.meeples)
+                if n_meeples != 0:
+                    empty = False
+                    break
+            if empty:
+                placements.append(placement)
+        return placements
+
     ##
     # TODO: Two road placements could connect to the same road. These two placements would give the same outcome
     #       Needs Fix to improve search.
@@ -175,7 +222,7 @@ class GameState:
         for placement in tile.placements[ShapeType.ROAD]:
             empty = True
             for connection in placement.connections:
-                connected_road = self.board.get_connected_road(coords, (connection + rotation) % 4)
+                connected_road = self.board.get_connected_road(coords, (connection + 2*rotation) % 8)
                 if not connected_road:
                     continue
                 n_meeples = sum(connected_road.meeples)
@@ -215,7 +262,7 @@ class GameState:
         for placement in tile.placements[ShapeType.CITY]:
             empty = True
             for connection in placement.connections:
-                connected_city = self.board.get_connected_city(coords, (connection + rotation) % 4)
+                connected_city = self.board.get_connected_city(coords, (connection + 2*rotation) % 8)
                 if not connected_city:
                     continue
                 n_meeples = sum(connected_city.meeples)
