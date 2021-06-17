@@ -13,7 +13,7 @@ tile_types = {
         monastery_placement=MonasteryPlacement(meeple_xy=[0, 0]),
         city_placements=[],
         road_placements=[RoadPlacement(connections=[EdgeOrientation.D],
-                                       meeple_xy=(0, -25))],
+                                       meeple_xy=(0, 25))],
         field_placements=[FieldPlacement([FieldConnection.UL, FieldConnection.UR, FieldConnection.RU,
                                           FieldConnection.RD, FieldConnection.DL, FieldConnection.DR,
                                           FieldConnection.LU, FieldConnection.LD],

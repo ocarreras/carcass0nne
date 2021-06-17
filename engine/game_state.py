@@ -62,9 +62,9 @@ class GameState:
         if self.meeples[self.current_player] == 0:
             return placements
 
-        # placements.extend(self.__get_city_meeple_placements(tile, coords, rotation))
-        # if tile.monasteryPlacement:
-        #    placements.append(tile.monasteryPlacement)
+        placements.extend(self.__get_city_meeple_placements(tile, coords, rotation))
+        if tile.monasteryPlacement:
+            placements.append(tile.monasteryPlacement)
         placements.extend(self.__get_road_meeple_placements(tile, coords, rotation))
         return placements
 
@@ -217,7 +217,6 @@ class GameState:
                 if placement:
                     placement.inc_score()
                     if placement.completed:
-                        print("SCORING monastery")
                         self.__score_monastery(placement)
 
     def __insert_meeple(self, tile: Tile, placement: Placement):

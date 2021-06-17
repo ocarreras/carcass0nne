@@ -26,7 +26,7 @@ class City:
     def __init__(self, placement: CityPlacement, coords, n_players):
         self.completed = False
         self.placements = [placement]
-        self.openEdges = []
+        self.open_edges = []
         self.initialize_open_edges(placement, coords)
         self.meeples = [0 for _ in range(n_players)]
         self.coords = coords
@@ -45,9 +45,9 @@ class City:
         return [i for i in range(len(self.meeples)) if self.meeples[i] == max_meeples]
 
     def initialize_open_edges(self, placement: CityPlacement, coords):
-        self.openEdges = []
+        self.open_edges = []
         for connection in placement.connections:
-            self.openEdges.append(Edge(coords, connection))
+            self.open_edges.append(Edge(coords, connection))
 
     def insert_meeple(self, n_player):
         self.meeples[n_player] += 1
@@ -62,15 +62,15 @@ class City:
 
         for placement in city.placements:
             placement.city = self
-        for edge in city.openEdges:
-            if edge.opposite() in self.openEdges:
-                self.openEdges.remove(edge.opposite())
+        for edge in city.open_edges:
+            if edge.opposite() in self.open_edges:
+                self.open_edges.remove(edge.opposite())
             else:
-                self.openEdges.append(edge)
+                self.open_edges.append(edge)
         self.placements.extend(city.placements)
         self.meeples = [x+y for x, y in zip(self.meeples, city.meeples)]
 
-        if len(self.openEdges) == 0:
+        if len(self.open_edges) == 0:
             self.completed = True
         return self.completed
 
@@ -82,7 +82,7 @@ class City:
         print(self)
         if not self.completed:
             print("\tEDGE_LIST:")
-            for edge in self.openEdges:
+            for edge in self.open_edges:
                 print(f"\t\t{edge}")
         print("\tPLACEMENTS")
         placement: CityPlacement

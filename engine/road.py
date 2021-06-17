@@ -1,5 +1,5 @@
 from __future__ import annotations
-from engine.placement import Placement, EdgeOrientation
+from engine.placement import Placement, Edge, EdgeOrientation
 from engine.coords import Coords
 
 
@@ -26,7 +26,7 @@ class Road:
     def __init__(self, placement: RoadPlacement, coords: Coords, n_players: int):
         self.completed = False
         self.placements = [placement]
-        self.n_open_edges = None
+        self.open_edges = None
         self.initialize_open_edges(placement, coords)
         self.meeples = [0 for _ in range(n_players)]
         self.coords = coords
@@ -50,6 +50,11 @@ class Road:
     def initialize_open_edges(self, placement: RoadPlacement, coords):
         self.n_open_edges = len(placement.connections)
 
+    def initialize_open_edges(self, placement: RoadPlacement, coords):
+        self.open_edges = []
+        for connection in placement.connections:
+            self.open_edges.append(Edge(coords, connection))
+
     ##
     # Returns true if the merge completes the road
     def merge_road(self, road: Road) -> bool:
@@ -60,12 +65,13 @@ class Road:
         self.placements.extend(road.placements)
         self.meeples = [x+y for x, y in zip(self.meeples, road.meeples)]
 
-        ##
-        # we need to account for a road finishing two of our current open edges
-        if road.n_open_edges == 1:
-            self.n_open_edges -= 1
+        for edge in road.open_edges:
+            if edge.opposite() in self.open_edges:
+                self.open_edges.remove(edge.opposite())
+            else:
+                self.open_edges.append(edge)
 
-        if self.n_open_edges == 0:
+        if len(self.open_edges) == 0:
             self.completed = True
         return self.completed
 
