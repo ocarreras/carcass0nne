@@ -5,8 +5,12 @@ from engine.tile import Tile
 from engine.placement import EdgeOrientation
 from engine.city import City, CityPlacement
 from engine.road import Road, RoadPlacement
+from engine.placement import Placement
+from collections.abc import MutableMapping
+from engine.shape import Shape, ShapeType
 
-class Board:
+
+class Board(MutableMapping):
     def __init__(self, initial_coords: Coords, first_tile: Tile):
         self.board: Dict[Coords, Tile] = {initial_coords: first_tile}
         self.freeSquares = [
@@ -41,57 +45,36 @@ class Board:
             return False
         return True
 
-    ##
-    # TODO:
-    #   __get_connected_city_placement
-    #   __get_connected_road_placement -> similar, needs refactor
-    def __get_connected_city_placement(self, coords: Coords, connection: EdgeOrientation) -> CityPlacement:
+    def __get_connected_placement(self, shape_type: ShapeType, coords: Coords, connection: EdgeOrientation) \
+            -> Placement:
         if connection == EdgeOrientation.U:
             if coords.up() in self.board:
-                return self.board[coords.up()].cityConnections[EdgeOrientation.D]
+                return self.board[coords.up()].connections[shape_type][EdgeOrientation.D]
             return None
         if connection == EdgeOrientation.D:
             if coords.down() in self.board:
-                return self.board[coords.down()].cityConnections[EdgeOrientation.U]
+                return self.board[coords.down()].connections[shape_type][EdgeOrientation.U]
             return None
         if connection == EdgeOrientation.R:
             if coords.right() in self.board:
-                return self.board[coords.right()].cityConnections[EdgeOrientation.L]
+                return self.board[coords.right()].connections[shape_type][EdgeOrientation.L]
             return None
         if connection == EdgeOrientation.L:
             if coords.left() in self.board:
-                return self.board[coords.left()].cityConnections[EdgeOrientation.R]
-            return None
-    ##
-    # TODO:
-    #   __get_connected_city_placement
-    #   __get_connected_road_placement -> similar, needs refactor
-    def __get_connected_road_placement(self, coords: Coords, connection: EdgeOrientation) -> RoadPlacement:
-        if connection == EdgeOrientation.U:
-            if coords.up() in self.board:
-                return self.board[coords.up()].roadConnections[EdgeOrientation.D]
-            return None
-        if connection == EdgeOrientation.D:
-            if coords.down() in self.board:
-                return self.board[coords.down()].roadConnections[EdgeOrientation.U]
-            return None
-        if connection == EdgeOrientation.R:
-            if coords.right() in self.board:
-                return self.board[coords.right()].roadConnections[EdgeOrientation.L]
-            return None
-        if connection == EdgeOrientation.L:
-            if coords.left() in self.board:
-                return self.board[coords.left()].roadConnections[EdgeOrientation.R]
+                return self.board[coords.left()].connections[shape_type][EdgeOrientation.R]
             return None
 
     def get_connected_city(self, coords: Coords, connection: EdgeOrientation) -> City:
-        placement = self.__get_connected_city_placement(coords, connection)
-        return placement.city if placement else None
+        placement = self.__get_connected_placement(ShapeType.CITY, coords, connection)
+        return placement.shape if placement else None
 
     def get_connected_road(self, coords: Coords, connection: EdgeOrientation) -> Road:
-        placement = self.__get_connected_road_placement(coords, connection)
-        return placement.road if placement else None
+        placement = self.__get_connected_placement(ShapeType.ROAD, coords, connection)
+        return placement.shape if placement else None
 
+    def get_connected_shape(self, shape_type: ShapeType, coords: Coords, connection: EdgeOrientation) -> Shape:
+        placement = self.__get_connected_placement(shape_type, coords, connection)
+        return placement.shape if placement else None
 
     def __update_free_squares(self, coords: Coords):
         self.freeSquares.remove(coords)
@@ -103,3 +86,21 @@ class Board:
             self.freeSquares.append(coords.right())
         if coords.left() not in self.board and coords.left() not in self.freeSquares:
             self.freeSquares.append(coords.left())
+
+    def __getitem__(self, key):
+        return self.board[key] if key in self.board else None
+
+    def __setitem__(self, key, val):
+        self.board[key] = val
+
+    def __contains__(self, key):
+        return key in self.board
+
+    def __delitem__(self, key):
+        del self.board[key]
+
+    def __len__(self, key):
+        return len(self.board)
+
+    def __iter__(self):
+        return iter(self.board)

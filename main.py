@@ -26,6 +26,6 @@ if __name__ == "__main__":
     game = Game()
 
     for i in range(20):
-        game.reset()
+        game.start()
         do_main(game)
         print(i)

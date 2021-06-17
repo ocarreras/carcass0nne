@@ -52,26 +52,23 @@ class Gui:
         PhotoImage(master=self.canvas, width=self.canvas_width, height=self.canvas_height)
 
         for player in range(game_state.n_players):
-            self.canvas.create_text((0, player*20), text=f"Player {player:02d} : {game_state.scores[player]:03d} | {game_state.meeples[player]:02d}",
+            self.canvas.create_text((0, player*20), text=f"Player {player:02d} : {game_state.scores[player]:03d} "
+                                                         + f"| {game_state.meeples[player]:02d}",
                                     anchor=NW, fill='blue')
 
         for coords in game_state.board.board.keys():
-            tile = game_state.board.board[coords]
+            tile = game_state.board[coords]
             self.__draw_tile(coords, tile)
-            for placement in tile.cityPlacements:
-                if placement.meeple is not None:
-                    self.__draw_meeple(coords, placement.meeple_xy, tile.rotation, placement.meeple)
-            if tile.monasteryPlacement and tile.monasteryPlacement.meeple is not None:
-                self.__draw_meeple(coords, tile.monasteryPlacement.meeple_xy, tile.rotation,
-                                   tile.monasteryPlacement.meeple)
-            for placement in tile.roadPlacements:
-                if placement.meeple is not None:
-                    self.__draw_meeple(coords, placement.meeple_xy, tile.rotation, placement.meeple)
+            for placement_type in tile.placements:
+                for placement in tile.placements[placement_type]:
+                    if placement and placement.meeple is not None:
+                        self.__draw_meeple(coords, placement.meeple_xy, tile.rotation, placement.meeple)
 
         for coords in game_state.board.freeSquares:
             self.__draw_empty(coords)
 
         self.canvas.update()
+        self.save_canvas_img()
 
     def __coords_to_pixels(self, coords: Coords):
         return self.center_x + coords.x * self.tile_size, \

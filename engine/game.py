@@ -5,10 +5,10 @@ from engine.game_ui import Gui
 class Game:
     def __init__(self, n_players=2):
         self.n_players = n_players
-        self.state = GameState(self.n_players)
+        self.state = None
         self.gui = Gui()
 
-    def reset(self):
+    def start(self):
         self.state = GameState(self.n_players)
         #self.gui = Gui()
 

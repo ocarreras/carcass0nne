@@ -1,3 +1,4 @@
+from typing import Dict
 from engine.tile_sets import base_deck
 from engine.tile import Tile
 from engine.city import CityPlacement, City
@@ -6,7 +7,7 @@ from engine.monastery import MonasteryPlacement
 from engine.coords import Coords
 from engine.placement import EdgeOrientation, Placement
 from engine.board import Board
-from enum import IntEnum
+from engine.shape import Shape, ShapeType
 
 import random
 import copy
@@ -16,24 +17,29 @@ class GameState:
     def __init__(self, n_players):
         self.n_players = n_players
         self.current_player = 0
-        self.deck: [Tile] = []
+        self.deck: [Tile] = None
         self.board: Board = None
-        self.scores: [int] = []
-        self.meeples: [int] = []
-        self.cities: [City] = []
-        self.monasteries: [MonasteryPlacement] = []
-        self.roads = []
-        self.monasteries = []
+        self.scores: [int] = None
+        self.meeples: [int] = None
+        self.unfinished_shapes: Dict[ShapeType, list] = None
         self.initialize()
 
     def initialize(self):
+        print("INITIALIZE")
         self.scores = [0 for _ in range(self.n_players)]
         self.meeples = [7 for _ in range(self.n_players)]
         self.current_player = 0
+        self.unfinished_shapes = {
+            ShapeType.CITY: [],
+            ShapeType.ROAD: [],
+            ShapeType.MONASTERY: [],
+            ShapeType.FIELD: []
+        }
 
         # Deck initialization
+        self.deck = []
         for tile_type in base_deck.tile_counts:
-            # We need to duplicate all objects to avoid multiple references.
+            # We need to dup licate all objects to avoid multiple references.
             self.deck.extend([copy.deepcopy(base_deck.tile_types[tile_type])
                               for _ in range(base_deck.tile_counts[tile_type])])
         random.shuffle(self.deck)
@@ -42,8 +48,8 @@ class GameState:
         initial_tile = base_deck.tile_types["D"]
         self.board = Board(Coords(0, 0), initial_tile)
         initial_tile.place(self.board, Coords(0, 0), 0, self.n_players)
-        self.__insert_and_merge_cities(initial_tile, initial_tile.coords)
-        self.__insert_and_merge_roads(initial_tile, initial_tile.coords)
+        self.__insert_and_merge_shapes(ShapeType.CITY, initial_tile, initial_tile.coords)
+        self.__insert_and_merge_shapes(ShapeType.ROAD, initial_tile, initial_tile.coords)
 
     ##
     # Get available tile placements.
@@ -63,23 +69,90 @@ class GameState:
             return placements
 
         placements.extend(self.__get_city_meeple_placements(tile, coords, rotation))
-        if tile.monasteryPlacement:
-            placements.append(tile.monasteryPlacement)
+        placements.extend(tile.placements[ShapeType.MONASTERY])
         placements.extend(self.__get_road_meeple_placements(tile, coords, rotation))
         return placements
 
+    def __score_shape(self, shape_type: ShapeType, shape: Shape):
+        score = shape.score()
+        winners = shape.winners()
+        for winner in winners:
+            self.scores[winner] += score
+        for placement in shape.placements:
+            if placement.meeple is not None:
+                self.meeples[placement.meeple] += 1
+                placement.meeple = None
+        shape.reset_meeples(self.n_players)
+        self.unfinished_shapes[shape_type].remove(shape)
+
+    def __insert_and_merge_shapes(self, shape_type: ShapeType, tile: Tile, coords: Coords):
+        for placement in tile.placements[shape_type]:
+            self.unfinished_shapes[shape_type].append(placement.shape)
+
+            connection: EdgeOrientation
+            for connection in placement.connections:
+                merged_shape = self.board.get_connected_shape(shape_type, coords, connection)
+                if merged_shape:
+                    if merged_shape == placement.shape:
+                        continue
+                    completed = placement.shape.merge(merged_shape)
+                    if completed:
+                        self.__score_shape(shape_type, placement.shape)
+                    self.unfinished_shapes[shape_type].remove(merged_shape)
+
+    def __update_monasteries(self, tile: Tile, coords: Coords):
+        for monastery in self.unfinished_shapes[ShapeType.MONASTERY]:
+            monastery_coords = monastery.coords
+
+            if monastery_coords != coords and \
+                    abs(monastery_coords.x - coords.x) <= 1 and \
+                    abs(monastery_coords.y - coords.y) <= 1:
+                monastery.inc_neighbours()
+                if monastery.completed:
+                    self.__score_shape(ShapeType.MONASTERY, monastery)
+
+    def __insert_meeple(self, tile: Tile, placement: Placement):
+        if not placement:
+            return
+        self.meeples[self.current_player] -= 1
+        placement.meeple = self.current_player
+        placement.shape.meeples[self.current_player] += 1
+
+    def insert_tile(self, coords: Coords, tile: Tile, rotation: int, placement: Placement):
+        print("INSERT_TILE")
+        print(f"(\"{tile.tile_name}\", ({coords.y}, {coords.x}), {rotation}),")
+
+        tile.place(self.board, coords, rotation, self.n_players)
+        self.board.insert_tile(coords, tile)
+
+        if placement:
+            self.__insert_meeple(tile, placement)
+
+        self.__insert_and_merge_shapes(ShapeType.CITY, tile, coords)
+        self.__insert_and_merge_shapes(ShapeType.ROAD, tile, coords)
+        self.__insert_and_merge_shapes(ShapeType.MONASTERY, tile, coords)
+        self.__update_monasteries(tile, coords)
+
+        self.current_player = (self.current_player + 1) % self.n_players
+
+    def __print_city_list(self):
+        print("City list")
+        for city in self.unfinished_shapes[ShapeType.CITY]:
+            if not city.completed:
+                city.print()
+
     ##
-    # TODO: Two road placements could connect to the same road. These two placements would give the same outcome    #
+    # TODO: Two road placements could connect to the same road. These two placements would give the same outcome
     #       Needs Fix to improve search.
     #         _____________
     #        |-RP1 X RP2 -|
     def __get_road_meeple_placements(self, tile: Tile, coords: Coords, rotation: int) -> [RoadPlacement]:
         placements = []
 
-        for placement in tile.roadPlacements:
+        for placement in tile.placements[ShapeType.ROAD]:
             empty = True
             for connection in placement.connections:
-                connected_road = self.board.get_connected_road(coords, (connection+rotation) % 4)
+                connected_road = self.board.get_connected_road(coords, (connection + rotation) % 4)
                 if not connected_road:
                     continue
                 n_meeples = sum(connected_road.meeples)
@@ -113,13 +186,13 @@ class GameState:
     # The basic tile_set doesn't have any tile with multiple placements where one of them merges cities.
     #
     # TODO: Returning CityPlacement temporarily
-    def __get_city_meeple_placements(self, tile:Tile, coords: Coords, rotation) -> [CityPlacement]:
+    def __get_city_meeple_placements(self, tile: Tile, coords: Coords, rotation) -> [CityPlacement]:
         placements = []
 
-        for placement in tile.cityPlacements:
+        for placement in tile.placements[ShapeType.CITY]:
             empty = True
             for connection in placement.connections:
-                connected_city = self.board.get_connected_city(coords, (connection+rotation) % 4)
+                connected_city = self.board.get_connected_city(coords, (connection + rotation) % 4)
                 if not connected_city:
                     continue
                 n_meeples = sum(connected_city.meeples)
@@ -130,136 +203,3 @@ class GameState:
                 # TODO: Check if we connect to the same city as another placement.
                 placements.append(placement)
         return placements
-
-    ##
-    # TODO: Refactor w road
-    def __score_city(self, city: City):
-        city_score = city.score()
-        winners = city.winners()
-        for winner in winners:
-            self.scores[winner] += city_score
-        placement: CityPlacement
-        for placement in city.placements:
-            if placement.meeple is not None:
-                self.meeples[placement.meeple] += 1
-                placement.meeple = None
-        city.reset_meeples(self.n_players)
-        self.cities.remove(city)
-
-    ##
-    # TODO: Refactor w city
-    def __score_road(self, road: Road):
-        road_score = road.score()
-        winners = road.winners()
-        for winner in winners:
-            self.scores[winner] += road_score
-        placement: RoadPlacement
-        for placement in road.placements:
-            if placement.meeple is not None:
-                self.meeples[placement.meeple] += 1
-                placement.meeple = None
-        road.reset_meeples(self.n_players)
-        self.roads.remove(road)
-
-    def __score_monastery(self, monastery: MonasteryPlacement):
-        if monastery.meeple is not None:
-            self.scores[monastery.meeple] += monastery.score
-            self.meeples[monastery.meeple] += 1
-            monastery.meeple = None
-
-    ##
-    # TODO: Very similar to roads -> Refactor.
-    def __insert_and_merge_cities(self, tile: Tile, coords: Coords):
-        placement: CityPlacement
-        for placement in tile.cityPlacements:
-            self.cities.append(placement.city)
-            connection: EdgeOrientation
-            for connection in placement.connections:
-                merged_city = self.board.get_connected_city(coords, connection)
-                if merged_city:
-                    if merged_city == placement.city:
-                        continue
-                    completed = placement.city.merge_city(merged_city)
-                    if completed:
-                        self.__score_city(placement.city)
-                    self.cities.remove(merged_city)
-
-    ##
-    # TODO: Very similar to cities -> Refactor.
-    def __insert_and_merge_roads(self, tile: Tile, coords: Coords):
-        placement: RoadPlacement
-        for placement in tile.roadPlacements:
-            self.roads.append(placement.road)
-            connection: EdgeOrientation
-            for connection in placement.connections:
-                merged_road = self.board.get_connected_road(coords, connection)
-                if merged_road:
-                    if merged_road == placement.road:
-                        continue
-                    completed = placement.road.merge_road(merged_road)
-                    if completed:
-                        self.__score_road(placement.road)
-                    self.roads.remove(merged_road)
-
-    ##
-    # Update score on the neighbour monasteries
-    def __insert_and_update_monasteries(self, tile: Tile, coords: Coords):
-        if tile.monasteryPlacement:
-            self.monasteries.append(tile.monasteryPlacement)
-
-        neighbours = [
-            coords.up(), coords.down(), coords.up().left(), coords.up().right(),
-            coords.left(), coords.right(), coords.down().left(), coords.down().right()
-        ]
-        for neighbour in neighbours:
-            if neighbour in self.board.board:
-                placement: MonasteryPlacement = self.board.board[neighbour].monasteryPlacement
-                if placement:
-                    placement.inc_score()
-                    if placement.completed:
-                        self.__score_monastery(placement)
-
-    def __insert_meeple(self, tile: Tile, placement: Placement):
-        assert self.meeples[self.current_player] > 0
-        if not placement:
-            return
-        self.meeples[self.current_player] -= 1
-        placement.meeple = self.current_player
-        if type(placement) == CityPlacement:
-            placement: CityPlacement
-            placement.city.meeples[self.current_player] += 1
-        if type(placement) == MonasteryPlacement:
-            placement: MonasteryPlacement
-            placement.meeple = self.current_player
-            if placement.completed:
-                self.__score_monastery(placement)
-        if type(placement) == RoadPlacement:
-            placement: RoadPlacement
-            placement.road.meeples[self.current_player] += 1
-
-    def insert_tile(self, coords: Coords, tile: Tile, rotation: int, placement: Placement):
-        assert coords not in self.board.board
-        assert coords in self.board.freeSquares
-
-        print(f"(\"{tile.tile_name}\", ({coords.y}, {coords.x}), {rotation}),")
-
-        tile.place(self.board, coords, rotation, self.n_players)
-        self.board.insert_tile(coords, tile)
-
-        if placement:
-            self.__insert_meeple(tile, placement)
-
-        self.__insert_and_merge_cities(tile, coords)
-        self.__insert_and_merge_roads(tile, coords)
-        self.__insert_and_update_monasteries(tile, coords)
-
-        self.current_player = (self.current_player + 1) % self.n_players
-
-    def __print_city_list(self):
-        print("City list")
-        for city in self.cities:
-            if not city.completed:
-                city.print()
-        for city in self.cities:
-            if city.completed:
-                city.print()

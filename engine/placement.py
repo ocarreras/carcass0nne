@@ -8,6 +8,7 @@ class Placement:
         self.meeple_xy = meeple_xy
         self.connections = None
         self.meeple = None                  # id of a player or None
+        self.shape = None
 
 
 class EdgeOrientation(IntEnum):

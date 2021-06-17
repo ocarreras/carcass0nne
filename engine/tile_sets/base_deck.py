@@ -1,7 +1,7 @@
 import os
 
 from engine.placement import EdgeOrientation
-from engine.tile import Tile, TileBorderType
+from engine.tile import Tile, ShapeType
 from engine.city import CityPlacement
 from engine.monastery import MonasteryPlacement
 from engine.road import RoadPlacement
@@ -9,7 +9,7 @@ from engine.field import FieldPlacement, FieldConnection
 
 tile_types = {
     "A": Tile(
-        borders=[TileBorderType.FIELD, TileBorderType.FIELD, TileBorderType.ROAD, TileBorderType.FIELD],
+        borders=[ShapeType.FIELD, ShapeType.FIELD, ShapeType.ROAD, ShapeType.FIELD],
         monastery_placement=MonasteryPlacement(meeple_xy=[0, 0]),
         city_placements=[],
         road_placements=[RoadPlacement(connections=[EdgeOrientation.D],
@@ -21,7 +21,7 @@ tile_types = {
         image=os.path.join("base_game", "A.png")
     ),
     "B": Tile(
-        borders=[TileBorderType.FIELD, TileBorderType.FIELD, TileBorderType.FIELD, TileBorderType.FIELD],
+        borders=[ShapeType.FIELD, ShapeType.FIELD, ShapeType.FIELD, ShapeType.FIELD],
         monastery_placement=MonasteryPlacement(meeple_xy=[0, 0]),
         city_placements=[],
         road_placements=[],
@@ -32,7 +32,7 @@ tile_types = {
         image=os.path.join("base_game", "B.png")
     ),
     "C": Tile(
-        borders=[TileBorderType.CITY, TileBorderType.CITY, TileBorderType.CITY, TileBorderType.CITY],
+        borders=[ShapeType.CITY, ShapeType.CITY, ShapeType.CITY, ShapeType.CITY],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeOrientation.U, EdgeOrientation.D, EdgeOrientation.R,
                                                     EdgeOrientation.L],
@@ -43,7 +43,7 @@ tile_types = {
         image=os.path.join("base_game", "C.png")
     ),
     "D": Tile(
-        borders=[TileBorderType.CITY, TileBorderType.ROAD, TileBorderType.FIELD, TileBorderType.ROAD],
+        borders=[ShapeType.CITY, ShapeType.ROAD, ShapeType.FIELD, ShapeType.ROAD],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeOrientation.U],
                                        meeple_xy=[0, -22],
@@ -57,7 +57,7 @@ tile_types = {
         image=os.path.join("base_game", "D.png")
     ),
     "E": Tile(
-        borders=[TileBorderType.CITY, TileBorderType.FIELD, TileBorderType.FIELD, TileBorderType.FIELD],
+        borders=[ShapeType.CITY, ShapeType.FIELD, ShapeType.FIELD, ShapeType.FIELD],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeOrientation.U],
                                        meeple_xy=[0, -22],
@@ -69,7 +69,7 @@ tile_types = {
         image=os.path.join("base_game", "E.png")
     ),
     "F": Tile(
-        borders=[TileBorderType.FIELD, TileBorderType.CITY, TileBorderType.FIELD, TileBorderType.CITY],
+        borders=[ShapeType.FIELD, ShapeType.CITY, ShapeType.FIELD, ShapeType.CITY],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeOrientation.R, EdgeOrientation.L],
                                        meeple_xy=[0, 0],
@@ -83,7 +83,7 @@ tile_types = {
         image=os.path.join("base_game", "F.png")
     ),
     "G": Tile(
-        borders=[TileBorderType.FIELD, TileBorderType.CITY, TileBorderType.FIELD, TileBorderType.CITY],
+        borders=[ShapeType.FIELD, ShapeType.CITY, ShapeType.FIELD, ShapeType.CITY],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeOrientation.R, EdgeOrientation.L],
                                        meeple_xy=[0, 0],
@@ -97,7 +97,7 @@ tile_types = {
         image=os.path.join("base_game", "G.png")
     ),
     "H": Tile(
-        borders=[TileBorderType.CITY, TileBorderType.FIELD, TileBorderType.CITY, TileBorderType.FIELD],
+        borders=[ShapeType.CITY, ShapeType.FIELD, ShapeType.CITY, ShapeType.FIELD],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeOrientation.U],
                                        meeple_xy=[0, -22],
@@ -113,7 +113,7 @@ tile_types = {
         image=os.path.join("base_game", "H.png")
     ),
     "I": Tile(
-        borders=[TileBorderType.CITY, TileBorderType.FIELD, TileBorderType.FIELD, TileBorderType.CITY],
+        borders=[ShapeType.CITY, ShapeType.FIELD, ShapeType.FIELD, ShapeType.CITY],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeOrientation.U],
                                        meeple_xy=[0, -22],
@@ -129,7 +129,7 @@ tile_types = {
         image=os.path.join("base_game", "I.png")
     ),
     "J": Tile(
-        borders=[TileBorderType.CITY, TileBorderType.ROAD, TileBorderType.ROAD, TileBorderType.FIELD],
+        borders=[ShapeType.CITY, ShapeType.ROAD, ShapeType.ROAD, ShapeType.FIELD],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeOrientation.U],
                                        meeple_xy=[0, -22],
@@ -145,17 +145,18 @@ tile_types = {
         image=os.path.join("base_game", "J.png")
     ),
     "K": Tile(
-        borders=[TileBorderType.CITY, TileBorderType.FIELD, TileBorderType.ROAD, TileBorderType.ROAD],
+        borders=[ShapeType.CITY, ShapeType.FIELD, ShapeType.ROAD, ShapeType.ROAD],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeOrientation.U],
                                        meeple_xy=[0, -22],
                                        shield=False)],
         road_placements=[RoadPlacement(connections=[EdgeOrientation.L, EdgeOrientation.D],
                                        meeple_xy=[2, -2])],
+        field_placements=[],
         image=os.path.join("base_game", "K.png")
     ),
     "L": Tile(
-        borders=[TileBorderType.CITY, TileBorderType.ROAD, TileBorderType.ROAD, TileBorderType.ROAD],
+        borders=[ShapeType.CITY, ShapeType.ROAD, ShapeType.ROAD, ShapeType.ROAD],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeOrientation.U],
                                        meeple_xy=[0, -22],
@@ -166,102 +167,113 @@ tile_types = {
                                        meeple_xy=[-14, 0]),
                          RoadPlacement(connections=[EdgeOrientation.D],
                                        meeple_xy=[0, 14])],
+        field_placements=[],
         image=os.path.join("base_game", "L.png")
     ),
     "M": Tile(
-        borders=[TileBorderType.CITY, TileBorderType.CITY, TileBorderType.FIELD, TileBorderType.FIELD],
+        borders=[ShapeType.CITY, ShapeType.CITY, ShapeType.FIELD, ShapeType.FIELD],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeOrientation.U, EdgeOrientation.R],
                                        meeple_xy=[12, -12],
                                        shield=True)],
         road_placements=[],
+        field_placements=[],
         image=os.path.join("base_game", "M.png")
     ),
     "N": Tile(
-        borders=[TileBorderType.CITY, TileBorderType.CITY, TileBorderType.FIELD, TileBorderType.FIELD],
+        borders=[ShapeType.CITY, ShapeType.CITY, ShapeType.FIELD, ShapeType.FIELD],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeOrientation.U, EdgeOrientation.R],
                                        meeple_xy=[12, -12],
                                        shield=False)],
         road_placements=[],
+        field_placements=[],
         image=os.path.join("base_game", "N.png")
     ),
     "O": Tile(
-        borders=[TileBorderType.CITY, TileBorderType.ROAD, TileBorderType.ROAD, TileBorderType.CITY],
+        borders=[ShapeType.CITY, ShapeType.ROAD, ShapeType.ROAD, ShapeType.CITY],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeOrientation.U, EdgeOrientation.L],
                                        meeple_xy=[-12, -12],
                                        shield=True)],
         road_placements=[RoadPlacement(connections=[EdgeOrientation.R, EdgeOrientation.D],
                                        meeple_xy=[12, 12])],
+        field_placements=[],
         image=os.path.join("base_game", "O.png")
     ),
     "P": Tile(
-        borders=[TileBorderType.CITY, TileBorderType.ROAD, TileBorderType.ROAD, TileBorderType.CITY],
+        borders=[ShapeType.CITY, ShapeType.ROAD, ShapeType.ROAD, ShapeType.CITY],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeOrientation.U, EdgeOrientation.L],
                                        meeple_xy=[-12, -12],
                                        shield=False)],
         road_placements=[RoadPlacement(connections=[EdgeOrientation.R, EdgeOrientation.D],
                                        meeple_xy=[12, 12])],
+        field_placements=[],
         image=os.path.join("base_game", "P.png")
     ),
     "Q": Tile(
-        borders=[TileBorderType.CITY, TileBorderType.CITY, TileBorderType.FIELD, TileBorderType.CITY],
+        borders=[ShapeType.CITY, ShapeType.CITY, ShapeType.FIELD, ShapeType.CITY],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeOrientation.U, EdgeOrientation.L, EdgeOrientation.R],
                                        meeple_xy=[0, -10],
                                        shield=True)],
         road_placements=[],
+        field_placements=[],
         image=os.path.join("base_game", "Q.png")
     ),
     "R": Tile(
-        borders=[TileBorderType.CITY, TileBorderType.CITY, TileBorderType.FIELD, TileBorderType.CITY],
+        borders=[ShapeType.CITY, ShapeType.CITY, ShapeType.FIELD, ShapeType.CITY],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeOrientation.U, EdgeOrientation.L, EdgeOrientation.R],
                                        meeple_xy=[0, -10],
                                        shield=False)],
         road_placements=[],
+        field_placements=[],
         image=os.path.join("base_game", "R.png")
     ),
     "S": Tile(
-        borders=[TileBorderType.CITY, TileBorderType.CITY, TileBorderType.ROAD, TileBorderType.CITY],
+        borders=[ShapeType.CITY, ShapeType.CITY, ShapeType.ROAD, ShapeType.CITY],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeOrientation.U, EdgeOrientation.L, EdgeOrientation.R],
                                        meeple_xy=[0, -10],
                                        shield=True)],
         road_placements=[RoadPlacement(connections=[EdgeOrientation.D],
                                        meeple_xy=[0, 16])],
+        field_placements=[],
         image=os.path.join("base_game", "S.png")
     ),
     "T": Tile(
-        borders=[TileBorderType.CITY, TileBorderType.CITY, TileBorderType.ROAD, TileBorderType.CITY],
+        borders=[ShapeType.CITY, ShapeType.CITY, ShapeType.ROAD, ShapeType.CITY],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeOrientation.U, EdgeOrientation.L, EdgeOrientation.R],
                                        meeple_xy=[0, -10],
                                        shield=False)],
         road_placements=[RoadPlacement(connections=[EdgeOrientation.D],
                                        meeple_xy=[0, 16])],
+        field_placements=[],
         image=os.path.join("base_game", "T.png")
     ),
     "U": Tile(
-        borders=[TileBorderType.ROAD, TileBorderType.FIELD, TileBorderType.ROAD, TileBorderType.FIELD],
+        borders=[ShapeType.ROAD, ShapeType.FIELD, ShapeType.ROAD, ShapeType.FIELD],
         monastery_placement=None,
         city_placements=[],
         road_placements=[RoadPlacement(connections=[EdgeOrientation.U, EdgeOrientation.D],
                                        meeple_xy=[0, 0])],
+        field_placements=[],
         image=os.path.join("base_game", "U.png")
     ),
     "V": Tile(
-        borders=[TileBorderType.FIELD, TileBorderType.FIELD, TileBorderType.ROAD, TileBorderType.ROAD],
+        borders=[ShapeType.FIELD, ShapeType.FIELD, ShapeType.ROAD, ShapeType.ROAD],
         monastery_placement=None,
         city_placements=[],
         road_placements=[RoadPlacement(connections=[EdgeOrientation.L, EdgeOrientation.D],
                                        meeple_xy=[-10, 10])],
+        field_placements=[],
         image=os.path.join("base_game", "V.png")
     ),
     "W": Tile(
-        borders=[TileBorderType.FIELD, TileBorderType.ROAD, TileBorderType.ROAD, TileBorderType.ROAD],
+        borders=[ShapeType.FIELD, ShapeType.ROAD, ShapeType.ROAD, ShapeType.ROAD],
         monastery_placement=None,
         image=os.path.join("base_game", "W.png"),
         city_placements=[],
@@ -271,9 +283,10 @@ tile_types = {
                                        meeple_xy=[-20, 0]),
                          RoadPlacement(connections=[EdgeOrientation.D],
                                        meeple_xy=[0, 20])],
+        field_placements=[],
     ),
     "X": Tile(
-        borders=[TileBorderType.ROAD, TileBorderType.ROAD, TileBorderType.ROAD, TileBorderType.ROAD],
+        borders=[ShapeType.ROAD, ShapeType.ROAD, ShapeType.ROAD, ShapeType.ROAD],
         monastery_placement=None,
         image=os.path.join("base_game", "X.png"),
         city_placements=[],
@@ -286,6 +299,7 @@ tile_types = {
                          RoadPlacement(connections=[EdgeOrientation.U],
                                        meeple_xy=[0, -20])
                          ],
+        field_placements=[],
     ),
 }
 

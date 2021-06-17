@@ -1,6 +1,7 @@
 from __future__ import annotations
 from engine.placement import Placement, Edge, EdgeOrientation
 from engine.coords import Coords
+from engine.shape import Shape
 
 
 ##
@@ -22,58 +23,12 @@ class RoadPlacement(Placement):
         return self.__str__()
 
 
-class Road:
+class Road(Shape):
     def __init__(self, placement: RoadPlacement, coords: Coords, n_players: int):
-        self.completed = False
-        self.placements = [placement]
-        self.open_edges = None
-        self.initialize_open_edges(placement, coords)
-        self.meeples = [0 for _ in range(n_players)]
-        self.coords = coords
+        super().__init__(placement, coords, n_players)
 
     def score(self):
         return len(self.placements)
-
-    def winners(self):
-        max_meeples = max(self.meeples)
-        winners = []
-        if max_meeples == 0:
-            return winners
-        return [i for i in range(len(self.meeples)) if self.meeples[i] == max_meeples]
-
-    def insert_meeple(self, n_player):
-        self.meeples[n_player] += 1
-
-    def reset_meeples(self, n_players):
-        self.meeples = [0 for _ in range(n_players)]
-
-    def initialize_open_edges(self, placement: RoadPlacement, coords):
-        self.n_open_edges = len(placement.connections)
-
-    def initialize_open_edges(self, placement: RoadPlacement, coords):
-        self.open_edges = []
-        for connection in placement.connections:
-            self.open_edges.append(Edge(coords, connection))
-
-    ##
-    # Returns true if the merge completes the road
-    def merge_road(self, road: Road) -> bool:
-        assert road != self
-
-        for placement in road.placements:
-            placement.road = self
-        self.placements.extend(road.placements)
-        self.meeples = [x+y for x, y in zip(self.meeples, road.meeples)]
-
-        for edge in road.open_edges:
-            if edge.opposite() in self.open_edges:
-                self.open_edges.remove(edge.opposite())
-            else:
-                self.open_edges.append(edge)
-
-        if len(self.open_edges) == 0:
-            self.completed = True
-        return self.completed
 
     def __str__(self):
         return f"ROAD {hex(id(self))} {self.coords} #{len(self.placements):02d} " + ("COMPLETED" if self.completed else "OPEN")

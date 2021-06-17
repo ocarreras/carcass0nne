@@ -1,34 +1,33 @@
-from enum import Enum
+from typing import Dict
 
 from engine.coords import Coords
 from engine.placement import EdgeOrientation, Placement
 from engine.city import City, CityPlacement
 from engine.road import Road, RoadPlacement
+from engine.monastery import Monastery, MonasteryPlacement
+
 from engine.field import FieldPlacement
-from engine.monastery import MonasteryPlacement
-
-
-class TileBorderType(Enum):
-    ROAD = 1
-    FIELD = 2
-    CITY = 3
+from engine.shape import ShapeType
 
 
 class Tile:
-    def __init__(self, borders: [TileBorderType] = None,
+    def __init__(self, borders: [ShapeType] = None,
                  city_placements: [CityPlacement] = None,
                  road_placements: [RoadPlacement] = None,
                  field_placements: [FieldPlacement] = None,
                  monastery_placement: MonasteryPlacement = None,
                  image=None):
-        self.borders: [TileBorderType] = borders
+        self.borders: [ShapeType] = borders
+        self.placements: Dict[ShapeType, list] = {
+            ShapeType.CITY: city_placements,
+            ShapeType.ROAD: road_placements,
+            ShapeType.FIELD: field_placements,
+            ShapeType.MONASTERY: []
+        }
+        if monastery_placement:
+            self.placements[ShapeType.MONASTERY] = [monastery_placement]
 
-        self.cityPlacements: [CityPlacement] = city_placements
-        self.cityConnections: dict[EdgeOrientation, CityPlacement] = {}
-        self.roadPlacements: [RoadPlacement] = road_placements
-        self.roadConnections: dict[EdgeOrientation, RoadPlacement] = {}
-        self.fieldPlacements: [FieldPlacement] = field_placements
-        self.monasteryPlacement: MonasteryPlacement = monastery_placement
+        self.connections: Dict[ShapeType, Dict[EdgeOrientation, Placement]] = None
         self.image = image
         self.tile_name = image[10]
         self.rotation = 0
@@ -37,7 +36,7 @@ class Tile:
     def __str__(self):
         return f"Tile: {self.tile_name} R:{self.rotation}"
 
-    ##
+    ##roadPlacements
     # Place tile at coords/rotation, initialize all placemetns.
     def place(self, board, coords: Coords, rotation: int, n_players: int):
         self.coords = coords
@@ -48,36 +47,41 @@ class Tile:
     ##
     # We need to rotate all placements to our current orientation
     def __initialize_placements(self, board, coords: Coords, n_players):
-        cityPlacement: CityPlacement
-        for cityPlacement in self.cityPlacements:
+        for cityPlacement in self.placements[ShapeType.CITY]:
+            cityPlacement: CityPlacement
             cityPlacement.initialize(self.rotation)
-            cityPlacement.city = City(cityPlacement, coords, n_players)
-        if self.monasteryPlacement:
-            self.monasteryPlacement.initialize(board.board, coords)
-        roadPlacement: RoadPlacement
-        for roadPlacement in self.roadPlacements:
+            cityPlacement.shape = City(cityPlacement, coords, n_players)
+        for monasteryPlacement in self.placements[ShapeType.MONASTERY]:
+            monasteryPlacement: MonasteryPlacement
+            monasteryPlacement.shape = Monastery(monasteryPlacement, coords, n_players)
+            monasteryPlacement.shape.initialize(board, coords)
+        for roadPlacement in self.placements[ShapeType.ROAD]:
+            roadPlacement: RoadPlacement
             roadPlacement.initialize(self.rotation)
-            roadPlacement.road = Road(roadPlacement, coords, n_players)
-    ##
-    # Initialize <resource>Connection maps, so we can access them through U D R L
-    #
-    # We need to rotate placements with __initialize_placements before calling this.
-    def __initialize_tile_connections(self):
+            roadPlacement.shape = Road(roadPlacement, coords, n_players)
 
-        self.cityConnections = {}
+    ##
+    # Initialize connections maps, so we can access placements through U D R L maps
+    #
+    # We need to rotate placements with __initialize_placements before calling this function.
+    def __initialize_tile_connections(self):
+        self.connections = {ShapeType.CITY: {},
+                            ShapeType.ROAD: {},
+                            ShapeType.FIELD: {}}
+
         for orientation in EdgeOrientation:
-            self.cityConnections[orientation] = None
+            self.connections[ShapeType.CITY][orientation] = None
+        for orientation in EdgeOrientation:
+            self.connections[ShapeType.ROAD][orientation] = None
+
         cityPlacement: CityPlacement
-        for cityPlacement in self.cityPlacements:
+        for cityPlacement in self.placements[ShapeType.CITY]:
             for connection in cityPlacement.connections:
-                self.cityConnections[connection] = cityPlacement
-        self.roadConnections = {}
-        for orientation in EdgeOrientation:
-            self.roadConnections[orientation] = None
+                self.connections[ShapeType.CITY][connection] = cityPlacement
         roadPlacement: RoadPlacement
-        for roadPlacement in self.roadPlacements:
+        for roadPlacement in self.placements[ShapeType.ROAD]:
             for connection in roadPlacement.connections:
-                self.roadConnections[connection] = roadPlacement
+                self.connections[ShapeType.ROAD][connection] = roadPlacement
 
     def get_rotated_border(self, orientation: EdgeOrientation, rotation):
         return self.borders[(orientation - rotation) % 4]
