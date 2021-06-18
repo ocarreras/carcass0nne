@@ -1,4 +1,4 @@
-import time
+import argparse
 import random
 from engine.game import Game
 from engine.tile import Tile
@@ -23,12 +23,15 @@ def visualize_random_game(game):
     game.state.print_score()
 
 
-
 if __name__ == "__main__":
     game = Game(create_ui=True)
-    visualize_random_game(game)
-    # game.start()
-    # game.interactive()
-
-    #for i in range(0):
-    #    random_game(game)
+    parser = argparse.ArgumentParser(description="Simple program to test gui/engine")
+    parser.add_argument('--mode', help='[random|interactive].', default='random')
+    args = parser.parse_args()
+    if args.mode == "random":
+        visualize_random_game(game)
+    elif args.mode == "interactive":
+        game.start()
+        game.interactive()
+    else:
+        parser.print_help()

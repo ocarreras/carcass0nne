@@ -2,22 +2,20 @@ import os
 import random
 
 from tkinter import *
-from tkinter import Button, messagebox
 from engine.game_state import GameState
-from engine.placement import Placement
 from engine.tile import Tile
 from engine.coords import Coords
 from PIL import ImageTk, Image
-from PIL import ImageGrab
-
-
-# https://stackoverflow.com/questions/40658728/clickable-images-for-python
 
 
 class Gui:
     def on_closing(self):
         # if messagebox.askokcancel("Quit", "Do you want to quit?"):
         self.tk_root.destroy()
+        if self.game_state:
+            print("FINAL_SCORE")
+            self.game_state.calc_final_score()
+            self.game_state.print_score()
 
     def __init__(self):
         self.canvas_width = 1800
@@ -41,14 +39,19 @@ class Gui:
         self.image_ref = []
         self.save_images = []
 
+        ##
+        # For interactive game-hack
         self.input_available_tile_placements = {}
         self.input_selected_tile_placement_coord = None
         self.input_selected_tile_placement_rotation = None
         self.input_selected_tile = None
         self.input_selected_meeple_placement = 0
         self.input_available_meeple_placements = []
+        self.input_available_meeple_placements_imgs = []
         self.game_state = None
 
+    ##
+    # Generate gif animations
     def save_canvas_img(self):
         self.canvas.postscript(file="save_canvas.eps")
         img = Image.open("save_canvas.eps")
@@ -59,34 +62,20 @@ class Gui:
                                      optimize=False,
                                      duration=500, loop=0)
 
-    def callback_button(self, event, img_id):
-        print("CALLBACK")
-        print(img_id)
-        print(event)
-        # print(NUM)
-        self.canvas.delete(img_id)
-
     def __pixels_to_coords(self, x, y):
         return Coords((y - self.center_y) // self.tile_size,
                       (x - self.center_x) // self.tile_size)
 
-    def callback_input_tile_placement_right(self, event):
-        print("TILE - BUTON 2")
+    def callback_input_tile_placement_next(self, event=None):
         if self.input_selected_tile_placement_coord:
             self.ask_new_meeple_placement()
 
     def callback_input_tile_placement(self, event):
         coords = self.__pixels_to_coords(event.x, event.y)
-        selected = self.input_available_tile_placements[
-            coords] if coords in self.input_available_tile_placements else None
-
-        if coords == Coords(-8, -12):
-            print("CLICK!!")
-            self.ask_new_meeple_placement()
-
+        selected = self.input_available_tile_placements[coords] if coords in self.input_available_tile_placements \
+            else None
         if selected:
             if self.input_selected_tile_placement_coord and coords == self.input_selected_tile_placement_coord:
-                print(selected['rotations'])
                 ind = (self.input_selected_tile_placement_rotation + 1) % len(selected['rotations'])
                 self.input_selected_tile_placement_rotation = selected['rotations'][ind]
             else:
@@ -103,51 +92,41 @@ class Gui:
             if self.input_selected_tile_placement_coord and coords == self.input_selected_tile_placement_coord:
                 continue
             abs_file_path: str = os.path.join(self.images_path, "Empty.png")
-            empty_img = Image.open(abs_file_path).resize((self.tile_size, self.tile_size),
-                                                         Image.ANTIALIAS)
-            photo_image = ImageTk.PhotoImage(empty_img)
-            self.image_ref.append(photo_image)
-            x, y = self.__coords_to_pixels(coords)
-            img_id = self.canvas.create_image(x, y, anchor=NW, image=photo_image)
-            self.input_available_tile_placements[coords]['img_id'] = img_id
+            x, y = self.__get_canvas_xy_from_game_coords(coords)
+            empty_img_id = self.__draw_image(abs_file_path, x, y, 0)
+            self.input_available_tile_placements[coords]['img_id'] = empty_img_id
+
         if self.input_selected_tile_placement_coord:
             self.input_selected_tile.rotation = self.input_selected_tile_placement_rotation
             self.__draw_tile(self.input_selected_tile_placement_coord, self.input_selected_tile)
 
     def __draw_input_meeple_placement(self):
+        for img in self.input_available_meeple_placements_imgs:
+            self.canvas.delete(img)
+        self.input_available_meeple_placements_imgs = []
         for ind, placement in enumerate(self.input_available_tile_placements):
             if not placement:
                 continue
             if ind == self.input_selected_meeple_placement:
-                self.__draw_meeple(self.input_selected_tile_placement_coord,
-                                   placement.meeple_xy,
-                                   self.input_selected_tile_placement_rotation, 5)
+                img = self.__draw_meeple(self.input_selected_tile_placement_coord,
+                                         placement.meeple_xy,
+                                         self.input_selected_tile_placement_rotation, 5)
             else:
-                self.__draw_meeple(self.input_selected_tile_placement_coord,
-                                   placement.meeple_xy,
-                                   self.input_selected_tile_placement_rotation, 4)
+                img = self.__draw_meeple(self.input_selected_tile_placement_coord,
+                                         placement.meeple_xy,
+                                         self.input_selected_tile_placement_rotation, 4)
+            self.input_available_meeple_placements_imgs.append(img)
 
-    def callback_input_meeple_placement_right(self, event):
-        print("MEEPLE SELECTION RIGHT")
+    def callback_input_meeple_placement_next(self, event):
         placement = self.input_available_tile_placements[self.input_selected_meeple_placement]
-        print("SELECTED PLACEMENT")
-        print(placement)
         self.game_state.insert_tile(self.input_selected_tile_placement_coord, self.input_selected_tile,
                                     self.input_selected_tile_placement_rotation, placement)
         self.ask_new_tile_placement()
 
     def callback_input_meeple_placement(self, event):
-        coords = self.__pixels_to_coords(event.x, event.y)
-        if coords == Coords(-8, -12):
-            print("CLICK!!")
-            placement = self.input_available_tile_placements[self.input_selected_meeple_placement]
-            print("SELECTED PLACEMENT")
-            print(placement)
-            self.game_state.insert_tile(self.input_selected_tile_placement_coord, self.input_selected_tile,
-                                        self.input_selected_tile_placement_rotation, placement)
-            self.ask_new_tile_placement()
-
+        # coords = self.__pixels_to_coords(event.x, event.y)
         print("MEEEEple")
+        # TODO: Rotate among the possible placements, we can do better.
         self.input_selected_meeple_placement = (self.input_selected_meeple_placement + 1) % \
                                                len(self.input_available_tile_placements)
         self.__draw_input_meeple_placement()
@@ -156,41 +135,52 @@ class Gui:
         placements = self.game_state.get_available_meeple_placements(self.input_selected_tile,
                                                                      self.input_selected_tile_placement_coord,
                                                                      self.input_selected_tile_placement_rotation)
+        if len(placements) == 0:
+            self.ask_new_tile_placement()
         self.input_available_tile_placements = placements
         self.__draw_input_meeple_placement()
         self.canvas.bind("<Button-1>", lambda e: self.callback_input_meeple_placement(e))
-        self.canvas.bind("<Double-3>", lambda e: self.callback_input_meeple_placement_right(e))
-        self.canvas.bind("<KeyPress-Down>", lambda e: self.callback_input_meeple_placement_right(e))
-        """
+        self.canvas.bind("<Double-3>", lambda e: self.callback_input_meeple_placement_next(e))
 
-        self.ask_new_tile_placement()
-        """
+    def play_ai_random(self):
+        tile_placements = []
+        while len(tile_placements) == 0:
+            if len(self.game_state.deck) == 0:
+                self.on_closing()
+            tile: Tile = self.game_state.deck.pop()
+            tile_placements = self.game_state.get_available_tile_placements(tile)
+        print("RANDOM_PLAY")
+        print(f"PLAYER: {self.game_state.current_player}")
+        coords, rotation = tile_placements[0]
+        meeple_placements = self.game_state.get_available_meeple_placements(tile, coords, rotation)
+        random.shuffle(meeple_placements)
+        meeple_placement = meeple_placements[0] if len(meeple_placements) > 0 else None
+        self.game_state.insert_tile(coords, tile, rotation, meeple_placement)
 
     def ask_new_tile_placement(self):
         if self.game_state.current_player == 1:
-            print("PLAYER 1")
-            tile: Tile = self.game_state.deck.pop()
-            tile_placements = self.game_state.get_available_tile_placements(tile)
-            if len(tile_placements) == 0:
-                print("BOOOM")
-                assert False
-            coords, rotation = tile_placements[0]
-            meeple_placements = self.game_state.get_available_meeple_placements(tile, coords, rotation)
-            random.shuffle(meeple_placements)
-            meeple_placement = meeple_placements[0] if len(meeple_placements) > 0 else None
-            self.game_state.insert_tile(coords, tile, rotation, meeple_placement)
+            self.play_ai_random()
 
-        print("NEW USER TILE PLACEMENT")
-        tile: Tile = self.game_state.deck.pop()
-        tile_placements = self.game_state.get_available_tile_placements(tile)
-        self.input_selected_tile = tile
+        if len(self.game_state.deck) == 0:
+            self.on_closing()
+        print(f"USER_PLAY")
+        print(f"PLAYER: {self.game_state.current_player}")
+
+        while True:
+            tile: Tile = self.game_state.deck.pop()
+            if tile.tile_name != "L":
+                continue
+            tile_placements = self.game_state.get_available_tile_placements(tile)
+            self.input_selected_tile = tile
+            break
 
         self.draw_game_state(self.game_state, False)
         self.__draw_tile(Coords(-8, -12), tile)
-
         self.input_selected_tile_placement_coord = None
         self.input_selected_tile_placement_rotation = None
         self.input_available_tile_placements = {}
+
+        # This is very uggly, but will do for now.
         for tile_placement in tile_placements:
             coords, rotation = tile_placement
             if coords not in self.input_available_tile_placements:
@@ -199,8 +189,7 @@ class Gui:
             self.input_available_tile_placements[coords]['rotations'].append(rotation)
         self.__draw_input_tile_placement()
         self.canvas.bind("<Button-1>", lambda e: self.callback_input_tile_placement(e))
-        self.canvas.bind("<Double-3>", lambda e: self.callback_input_tile_placement_right(e))
-        self.canvas.bind("<KeyPress-Down>", lambda e: self.callback_input_tile_placement_right(e))
+        self.canvas.bind("<Double-3>", lambda e: self.callback_input_tile_placement_next(e))
 
     def interactive(self, state):
         self.game_state = state
@@ -216,6 +205,8 @@ class Gui:
             self.canvas.create_text((0, player * 20), text=f"Player {player:02d} : {game_state.scores[player]:03d} "
                                                            + f"| {game_state.meeples[player]:02d}",
                                     anchor=NW, fill='blue')
+        self.canvas.create_text((0, 60), text=f"Deck size : {len(game_state.deck)}",
+                                anchor=NW, fill='blue')
 
         for coords in game_state.board.board.keys():
             tile = game_state.board[coords]
@@ -230,39 +221,43 @@ class Gui:
                 self.__draw_empty(coords)
 
         self.canvas.update()
-        # self.save_canvas_img()
 
-    def __coords_to_pixels(self, coords: Coords):
-        return self.center_x + coords.x * self.tile_size, \
-               self.center_y + coords.y * self.tile_size
-
-    def __draw_square(self, coords: Coords, image):
+    def __draw_image(self, image_path: str, x, y, rotation):
+        image = Image.open(image_path).resize((self.tile_size, self.tile_size),
+                                              Image.ANTIALIAS).rotate(-90 * rotation)
+        self.image_ref.append(image)
         photo_image = ImageTk.PhotoImage(image)
         self.image_ref.append(photo_image)
-        x, y = self.__coords_to_pixels(coords)
         self.canvas.create_image(x, y, anchor=NW, image=photo_image)
-
-    def __draw_tile(self, coords: Coords, tile):
-        abs_file_path: str = os.path.join(self.images_path, tile.image)
-        image = Image.open(abs_file_path).resize((self.tile_size, self.tile_size),
-                                                 Image.ANTIALIAS).rotate(-90 * tile.rotation)
-        self.image_ref.append(image)
-        self.__draw_square(coords, image)
-
-    def __draw_empty(self, coords: Coords):
-        abs_file_path: str = os.path.join(self.images_path, "Empty.png")
-        image = Image.open(abs_file_path).resize((self.tile_size, self.tile_size),
-                                                 Image.ANTIALIAS)
-        self.__draw_square(coords, image)
+        return photo_image
 
     def __draw_meeple(self, coords: Coords, offsets, rotation, player):
         image = self.meeple_images[player]
-        x, y = self.__coords_to_pixels(coords)
+        x, y = self.__get_canvas_xy_from_meeple_coords(coords, offsets, rotation)
+        photo_image = ImageTk.PhotoImage(image)
+        self.image_ref.append(photo_image)
+        self.canvas.create_image(x, y, anchor=NW, image=photo_image)
+        return photo_image
+
+    def __draw_tile(self, coords: Coords, tile):
+        abs_file_path: str = os.path.join(self.images_path, tile.image)
+        x, y = self.__get_canvas_xy_from_game_coords(coords)
+        self.__draw_image(abs_file_path, x, y, tile.rotation)
+
+    def __draw_empty(self, coords: Coords):
+        abs_file_path: str = os.path.join(self.images_path, "Empty.png")
+        x, y = self.__get_canvas_xy_from_game_coords(coords)
+        self.__draw_image(abs_file_path, x, y, 0)
+
+    def __get_canvas_xy_from_game_coords(self, coords: Coords):
+        return self.center_x + coords.x * self.tile_size, \
+               self.center_y + coords.y * self.tile_size
+
+    def __get_canvas_xy_from_meeple_coords(self, coords, offsets, rotation):
+        x, y = self.__get_canvas_xy_from_game_coords(coords)
         rotated_offsets = [offsets[0], offsets[1]]
         for i in range(rotation):
             rotated_offsets[0], rotated_offsets[1] = -rotated_offsets[1], rotated_offsets[0]
         x = x + self.tile_size / 2 - self.meeple_size / 2 + rotated_offsets[0]
         y = y + self.tile_size / 2 - self.meeple_size / 2 + rotated_offsets[1]
-        photo_image = ImageTk.PhotoImage(image)
-        self.image_ref.append(photo_image)
-        self.canvas.create_image(x, y, anchor=NW, image=photo_image)
+        return x, y
