@@ -24,7 +24,7 @@ class GameState:
         self.score_types: Dict[ShapeType, Dict[int, int]] = None
         self.meeples: [int] = None
         self.unfinished_shapes: Dict[ShapeType, list] = None
-        self.debug_level = 0
+        self.debug_level = debug
         self.initialize()
 
     def initialize(self):

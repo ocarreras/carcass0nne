@@ -1,6 +1,6 @@
 from engine.game_state import GameState
 from engine.game_ui import Gui
-
+from engine.tile import Tile
 
 class Game:
     def __init__(self, n_players=2, create_ui=True):
@@ -20,4 +20,5 @@ class Game:
     def get_new_tile(self):
         return self.state.deck.pop()
 
-
+    def interactive(self):
+        self.gui.interactive(self.state)

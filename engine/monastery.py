@@ -52,4 +52,7 @@ class MonasteryPlacement(Placement):
         self.connections = []
 
     def __str__(self):
-        return f"Monastery S:{self.shape.neighbours} M:{self.meeple}"
+        if self.shape:
+            return f"Monastery S:{self.shape.neighbours} M:{self.meeple}"
+        else:
+            return f"Monastery"
