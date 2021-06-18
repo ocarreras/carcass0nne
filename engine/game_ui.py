@@ -117,7 +117,8 @@ class Gui:
                                          self.input_selected_tile_placement_rotation, 4)
             self.input_available_meeple_placements_imgs.append(img)
 
-    def callback_input_meeple_placement_next(self, event):
+    def callback_input_meeple_placement_next(self, event=None):
+        print("Meeple Callback - Next")
         placement = self.input_available_tile_placements[self.input_selected_meeple_placement]
         self.game_state.insert_tile(self.input_selected_tile_placement_coord, self.input_selected_tile,
                                     self.input_selected_tile_placement_rotation, placement)
@@ -125,7 +126,9 @@ class Gui:
 
     def callback_input_meeple_placement(self, event):
         # coords = self.__pixels_to_coords(event.x, event.y)
-        print("MEEEEple")
+        print("Meeple Callback")
+        print(self.input_selected_meeple_placement)
+        print(self.input_available_tile_placements)
         # TODO: Rotate among the possible placements, we can do better.
         self.input_selected_meeple_placement = (self.input_selected_meeple_placement + 1) % \
                                                len(self.input_available_tile_placements)
@@ -135,9 +138,10 @@ class Gui:
         placements = self.game_state.get_available_meeple_placements(self.input_selected_tile,
                                                                      self.input_selected_tile_placement_coord,
                                                                      self.input_selected_tile_placement_rotation)
-        if len(placements) == 0:
-            self.ask_new_tile_placement()
+        self.input_selected_meeple_placement = 0
         self.input_available_tile_placements = placements
+        if len(placements) <= 1:
+            return self.callback_input_meeple_placement_next()
         self.__draw_input_meeple_placement()
         self.canvas.bind("<Button-1>", lambda e: self.callback_input_meeple_placement(e))
         self.canvas.bind("<Double-3>", lambda e: self.callback_input_meeple_placement_next(e))
@@ -146,7 +150,7 @@ class Gui:
         tile_placements = []
         while len(tile_placements) == 0:
             if len(self.game_state.deck) == 0:
-                self.on_closing()
+                return self.on_closing()
             tile: Tile = self.game_state.deck.pop()
             tile_placements = self.game_state.get_available_tile_placements(tile)
         print("RANDOM_PLAY")
@@ -160,19 +164,17 @@ class Gui:
     def ask_new_tile_placement(self):
         if self.game_state.current_player == 1:
             self.play_ai_random()
-
-        if len(self.game_state.deck) == 0:
-            self.on_closing()
         print(f"USER_PLAY")
         print(f"PLAYER: {self.game_state.current_player}")
 
         while True:
+            if len(self.game_state.deck) == 0:
+                return self.on_closing()
             tile: Tile = self.game_state.deck.pop()
-            if tile.tile_name != "L":
-                continue
             tile_placements = self.game_state.get_available_tile_placements(tile)
             self.input_selected_tile = tile
-            break
+            if len(tile_placements):
+                break
 
         self.draw_game_state(self.game_state, False)
         self.__draw_tile(Coords(-8, -12), tile)

@@ -52,8 +52,6 @@ def test_road_connection():
 def test_autocompleted_city():
     gs = GameState(2)
     tile = copy.deepcopy(tile_types["D"])
-    for road in gs.unfinished_shapes[ShapeType.ROAD]:
-        road.print()
     tile_placements = gs.get_available_tile_placements(tile)
     assert (Coords(-1, 0), 2) in tile_placements
     meeple_placements = gs.get_available_meeple_placements(tile, Coords(-1, 0), 2)
@@ -91,8 +89,6 @@ def test_autocompleted_monastery():
     assert gs.scores[0] == 0
     assert gs.meeples[0] == gs.meeples[1]
     assert monastery_placement.meeple is None
-    gs.print_open_shapes()
-    render_loop(gs)
 
 def test_monastery_completion():
     gs = GameState(2)
