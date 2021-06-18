@@ -125,14 +125,26 @@ class Gui:
         self.ask_new_tile_placement()
 
     def callback_input_meeple_placement(self, event):
-        # coords = self.__pixels_to_coords(event.x, event.y)
+        coords = self.__pixels_to_coords(event.x, event.y)
         print("Meeple Callback")
-        print(self.input_selected_meeple_placement)
-        print(self.input_available_tile_placements)
-        # TODO: Rotate among the possible placements, we can do better.
-        self.input_selected_meeple_placement = (self.input_selected_meeple_placement + 1) % \
-                                               len(self.input_available_tile_placements)
-        self.__draw_input_meeple_placement()
+        selected_placement = 0
+        min_dist = None
+        for ind in range(len(self.input_available_tile_placements)):
+            placement = self.input_available_tile_placements[ind]
+            if not placement:
+                continue
+            coords = self.input_selected_tile_placement_coord
+            rotation = self.input_selected_tile_placement_rotation
+            x, y = self.__get_canvas_xy_from_meeple_coords(coords, placement.meeple_xy, rotation)
+            dist = (x+self.meeple_size/2-event.x)**2 + (y+self.meeple_size/2-event.y)**2
+            if dist < 150:
+                if not min_dist or dist < min_dist:
+                    selected_placement = ind
+
+        if selected_placement != self.input_selected_meeple_placement:
+            self.input_selected_meeple_placement = selected_placement
+            self.__draw_input_meeple_placement()
+
 
     def ask_new_meeple_placement(self):
         placements = self.game_state.get_available_meeple_placements(self.input_selected_tile,
@@ -155,6 +167,7 @@ class Gui:
             tile_placements = self.game_state.get_available_tile_placements(tile)
         print("RANDOM_PLAY")
         print(f"PLAYER: {self.game_state.current_player}")
+        random.shuffle(tile_placements)
         coords, rotation = tile_placements[0]
         meeple_placements = self.game_state.get_available_meeple_placements(tile, coords, rotation)
         random.shuffle(meeple_placements)
