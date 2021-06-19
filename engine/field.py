@@ -24,6 +24,13 @@ class FieldPlacement(Placement):
     def __repr__(self):
         return self.__str__()
 
+    def copy(self):
+        my_copy = super(FieldPlacement, self).copy()
+        my_copy.__class__ = self.__class__
+        my_copy.cityPlacements = self.cityPlacements.copy()
+        my_copy.cityConnections = self.cityConnections.copy()
+        return my_copy
+
 
 class Field(Shape):
     def __init__(self, placement: FieldPlacement, coords, n_players):
@@ -33,7 +40,7 @@ class Field(Shape):
     def score(self):
         return sum(map(lambda c: 4 if c.completed else 0, self.adjacent_cities()))
 
-    def merge(self, merged_field: FieldPlacement):
+    def merge(self, merged_field: Field):
         super(Field, self).merge(merged_field)
         self.completed = False
         for placement in merged_field.cityPlacements:

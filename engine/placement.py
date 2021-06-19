@@ -3,15 +3,27 @@ from enum import IntEnum
 from engine.coords import Coords
 import copy
 
+
 class Placement:
     def __init__(self, meeple_xy=[0, 0]):
         self.meeple_xy = meeple_xy
         self.connections = None
         self.meeple = None                  # id of a player or None
         self.shape = None
+        self.completed = False
 
     def initialize(self, rotation: int):
         self.connections = list(map(lambda c: EdgeConnection((c + rotation * 2) % 8), self.connections))
+
+    def copy(self):
+        my_copy: Placement = Placement()
+        my_copy.meeple_xy = self.meeple_xy.copy()
+        my_copy.connections = self.connections.copy()
+        my_copy.meeple = self.meeple
+        my_copy.shape = self.shape
+        my_copy.completed = self.completed
+        return my_copy
+
 
     ##
     # Uggly!

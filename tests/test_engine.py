@@ -29,6 +29,7 @@ def insert_tiles(tiles, gs=None):
     for tile in tiles:
         insert_tile(gs, *tile)
     return gs
+
 """
 ##
 # Create road donut and complete it with a single tile while scoring.
@@ -78,7 +79,7 @@ def create_monastery_donut(gs):
 def test_autocompleted_monastery():
     gs = GameState(2)
     create_monastery_donut(gs)
-    tile = copy.deepcopy(tile_types["B"])
+    tile = tile_types["B"].copy()
     tile_placements = gs.get_available_tile_placements(tile)
     assert (Coords(1, 0), 0) in tile_placements
     meeple_placements = gs.get_available_meeple_placements(tile, Coords(1, 0), 0)
@@ -90,9 +91,10 @@ def test_autocompleted_monastery():
     assert gs.meeples[0] == gs.meeples[1]
     assert monastery_placement.meeple is None
 
+
 def test_monastery_completion():
     gs = GameState(2)
-    tile = copy.deepcopy(tile_types["B"])
+    tile = tile_types["B"].copy()
     meeple_placements = gs.get_available_meeple_placements(tile, Coords(1, 0), 0)
     monastery_placement = tile.placements[ShapeType.MONASTERY][0]
     assert monastery_placement in meeple_placements
@@ -115,7 +117,7 @@ def test_autocomplete_road():
         ("V", (1, -1), 2),
     ]
     insert_tiles(test_tile_info, gs)
-    tile = copy.deepcopy(tile_types["U"])
+    tile = tile_types["U"].copy()
     road_placement = tile.placements[ShapeType.ROAD][0]
     tile_placements = gs.get_available_tile_placements(tile)
     assert (Coords(1, 0), 1) in tile_placements
@@ -132,7 +134,7 @@ def test_autocomplete_road():
 # Place meeple in a road and complete it doing a circle/donut.
 def test_road_completion():
     gs = GameState(2)
-    tile = copy.deepcopy(tile_types["V"])
+    tile = tile_types["V"].copy()
     tile_placements = gs.get_available_tile_placements(tile)
     road_placement = tile.placements[ShapeType.ROAD][0]
     assert (Coords(0, 1), 0) in tile_placements

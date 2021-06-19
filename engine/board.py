@@ -11,7 +11,11 @@ from engine.shape import Shape, ShapeType
 
 
 class Board(MutableMapping):
-    def __init__(self, initial_coords: Coords, first_tile: Tile):
+    def __init__(self):
+        self.board: Dict[Coords, Tile] = {}
+        self.freeSquares = []
+
+    def init(self, initial_coords: Coords, first_tile: Tile):
         self.board: Dict[Coords, Tile] = {initial_coords: first_tile}
         self.freeSquares = [
             initial_coords.up(),
@@ -20,11 +24,16 @@ class Board(MutableMapping):
             initial_coords.left()
         ]
 
+    def copy(self):
+        my_copy = Board()
+        my_copy.board = self.board.copy()
+        my_copy.freeSquares = self.freeSquares.copy()
+
     def insert_tile(self, coords: Coords, tile: Tile):
         self.board[coords] = tile
         self.__update_free_squares(coords)
 
-    def fits(self, coords: Coords, tile: Tile, rotation: int):
+    def fits(self, tile: Tile, coords: Coords, rotation: int):
         assert (coords not in self.board)
 
         if coords.up() in self.board and \
@@ -44,6 +53,15 @@ class Board(MutableMapping):
                 tile.get_rotated_border(BorderOrientation.L, rotation):
             return False
         return True
+
+    def get_available_tile_placements(self, tile: Tile):
+        placements = []
+        for coords in self.freeSquares:
+            for rotation in range(4):
+                if self.fits(tile, coords, rotation):
+                    placements.append((coords, rotation))
+        return placements
+
 
     def __get_connected_placement(self, shape_type: ShapeType, coords: Coords, connection: EdgeConnection) \
             -> Placement:

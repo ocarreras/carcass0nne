@@ -156,7 +156,7 @@ class Gui:
             return self.callback_input_meeple_placement_next()
         self.__draw_input_meeple_placement()
         self.canvas.bind("<Button-1>", lambda e: self.callback_input_meeple_placement(e))
-        self.canvas.bind("<Double-3>", lambda e: self.callback_input_meeple_placement_next(e))
+        self.canvas.bind("<Button-2>", lambda e: self.callback_input_meeple_placement_next(e))
 
     def play_ai_random(self):
         tile_placements = []
@@ -204,7 +204,7 @@ class Gui:
             self.input_available_tile_placements[coords]['rotations'].append(rotation)
         self.__draw_input_tile_placement()
         self.canvas.bind("<Button-1>", lambda e: self.callback_input_tile_placement(e))
-        self.canvas.bind("<Double-3>", lambda e: self.callback_input_tile_placement_next(e))
+        self.canvas.bind("<Button-2>", lambda e: self.callback_input_tile_placement_next(e))
 
     def interactive(self, state):
         self.game_state = state
@@ -255,7 +255,8 @@ class Gui:
         return photo_image
 
     def __draw_tile(self, coords: Coords, tile):
-        abs_file_path: str = os.path.join(self.images_path, tile.image)
+        tile_file = os.path.join("base_game", f"{tile.tile_type}.png")
+        abs_file_path: str = os.path.join(self.images_path, tile_file)
         x, y = self.__get_canvas_xy_from_game_coords(coords)
         self.__draw_image(abs_file_path, x, y, tile.rotation)
 

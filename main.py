@@ -2,10 +2,11 @@ import argparse
 import random
 from engine.game import Game
 from engine.tile import Tile
+import copy
 
-def visualize_random_game(game):
-    game.start()
-
+@profile
+def simulate_random_game(game, do_visualize=True, show_score=True):
+    s = game.start()
     while len(game.state.deck) > 0:
         tile: Tile = game.get_new_tile()
         tile_placements = game.state.get_available_tile_placements(tile)
@@ -17,10 +18,19 @@ def visualize_random_game(game):
         random.shuffle(meeple_placements)
         meeple_placement = meeple_placements[0] if len(meeple_placements) > 0 else None
         game.state.insert_tile(coords, tile, rotation, meeple_placement)
-        game.render()
-    print("FINAL_SCORE")
-    game.state.calc_final_score()
-    game.state.print_score()
+        if do_visualize:
+            game.render()
+    if show_score:
+        print("FINAL_SCORE")
+        game.state.calc_final_score()
+        game.state.print_score()
+
+
+def simulate_games(game):
+    for i in range(50):
+        game.start()
+        print(i)
+        simulate_random_game(game, False, False)
 
 
 if __name__ == "__main__":
@@ -29,7 +39,8 @@ if __name__ == "__main__":
     parser.add_argument('--mode', help='[random|interactive].', default='random')
     args = parser.parse_args()
     if args.mode == "random":
-        visualize_random_game(game)
+        #simulate_random_game(game)
+        simulate_games(game)
     elif args.mode == "interactive":
         game.start()
         game.interactive()

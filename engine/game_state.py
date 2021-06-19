@@ -24,8 +24,26 @@ class GameState:
         self.score_types: Dict[ShapeType, Dict[int, int]] = None
         self.meeples: [int] = None
         self.unfinished_shapes: Dict[ShapeType, list] = None
-        self.debug_level = debug
+        self.debug_level = 0
         self.initialize()
+
+    def copy(self):
+        my_copy = GameState(self.n_players)
+        my_copy.current_player = self.current_player
+        my_copy.deck = []
+        for tile in self.deck:
+            my_copy.deck.append(tile.copy())
+        my_copy.board = self.board.copy()
+        my_copy.score_types = self.score_types.copy()
+        my_copy.meeples = self.meeples.copy()
+        my_copy.unfinished_shapes = {}
+        for shape_type in self.unfinished_shapes:
+            my_copy.unfinished_shapes[shape_type] = []
+            for shape in self.unfinished_shapes[shape_type]:
+                print("COPY SHAPE")
+                my_copy.unfinished_shapes[shape_type] = self.unfinished_shapes[shape_type]
+        my_copy.debug_level = self.debug_level
+        return my_copy
 
     def initialize(self):
         self.scores = [0 for _ in range(self.n_players)]
@@ -40,18 +58,18 @@ class GameState:
             ShapeType.MONASTERY: [],
             ShapeType.FIELD: []
         }
-
         # Deck initialization
         self.deck = []
         for tile_type in base_deck.tile_counts:
             # We need to dup licate all objects to avoid multiple references.
-            self.deck.extend([copy.deepcopy(base_deck.tile_types[tile_type])
+            self.deck.extend([base_deck.tile_types[tile_type].copy()
                               for _ in range(base_deck.tile_counts[tile_type])])
         random.shuffle(self.deck)
 
         # Inserting first tile and initializing board
         initial_tile = base_deck.tile_types["D"]
-        self.board = Board(Coords(0, 0), initial_tile)
+        self.board = Board()
+        self.board.init(Coords(0, 0), initial_tile)
         initial_tile.place(self.board, Coords(0, 0), 0, self.n_players)
         self.__insert_and_merge_shapes(ShapeType.CITY, initial_tile, initial_tile.coords)
         self.__insert_and_merge_shapes(ShapeType.ROAD, initial_tile, initial_tile.coords)
@@ -74,12 +92,7 @@ class GameState:
     ##
     # Get available tile placements.
     def get_available_tile_placements(self, tile: Tile) -> [(Coords, int)]:
-        placements = []
-        for coords in self.board.freeSquares:
-            for rotation in range(4):
-                if self.board.fits(coords, tile, rotation):
-                    placements.append((coords, rotation))
-        return placements
+        return self.board.get_available_tile_placements(tile)
 
     ##
     # Get a list of all legal meeple placements + an additional None entry for no placement.
@@ -187,7 +200,7 @@ class GameState:
         print(f"[[ FIELD LIST     : {len(self.unfinished_shapes[ShapeType.FIELD]):03d} ]]")
         for field in self.unfinished_shapes[ShapeType.FIELD]:
             field.print()
-            print(f"\tScore: {field.score()}")
+            print(f"\tScore: {field.shield()}")
             print("\tAdjacent cities")
             for city in field.adjacent_cities():
                 print(f"\t\t{city}")

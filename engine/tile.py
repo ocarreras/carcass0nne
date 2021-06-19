@@ -15,7 +15,7 @@ class Tile:
                  road_placements: [RoadPlacement] = None,
                  field_placements: [FieldPlacement] = None,
                  monastery_placement: MonasteryPlacement = None,
-                 image=None):
+                 tile_type: str = None):
         self.borders: [ShapeType] = borders
         self.placements: Dict[ShapeType, list] = {
             ShapeType.CITY: city_placements,
@@ -27,15 +27,23 @@ class Tile:
             self.placements[ShapeType.MONASTERY] = [monastery_placement]
 
         self.connections: Dict[ShapeType, Dict[EdgeConnection, Placement]] = None
-        self.image = image
-        self.tile_name = image[10]
+        self.tile_type = tile_type
         self.rotation = 0
         self.coords = 0
 
-    def __str__(self):
-        return f"Tile: {self.tile_name} R:{self.rotation}"
+    def copy(self):
+        my_copy = Tile()
+        my_copy.borders = self.borders.copy()
+        my_copy.placements = {}
+        for placement_type in self.placements:
+            my_copy.placements[placement_type] = []
+            for placement in self.placements[placement_type]:
+                my_copy.placements[placement_type].append(placement.copy())
+        my_copy.tile_type = self.tile_type
+        my_copy.rotation = self.rotation
+        my_copy.coords = self.coords
+        return my_copy
 
-    ##roadPlacements
     # Place tile at coords/rotation, initialize all placemetns.
     def place(self, board, coords: Coords, rotation: int, n_players: int):
         self.coords = coords
@@ -45,7 +53,6 @@ class Tile:
 
     ##
     # We need to rotate all placements to our current orientation
-    # TODO: Clean
     def __initialize_placements(self, board, coords: Coords, n_players):
         for cityPlacement in self.placements[ShapeType.CITY]:
             cityPlacement: CityPlacement
@@ -84,3 +91,6 @@ class Tile:
 
     def get_border(self, orientation: BorderOrientation):
         return self.borders[(orientation - self.rotation) % 4]
+
+    def __str__(self):
+        return f"Tile: {self.tile_name} R:{self.rotation}"

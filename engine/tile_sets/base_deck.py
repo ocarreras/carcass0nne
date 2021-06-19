@@ -9,7 +9,7 @@ from engine.field import FieldPlacement, EdgeConnection
 
 tile_types = {
     "A": Tile(
-        image=os.path.join("base_game", "A.png"),
+        tile_type="A",
         borders=[ShapeType.FIELD, ShapeType.FIELD, ShapeType.ROAD, ShapeType.FIELD],
         monastery_placement=MonasteryPlacement(meeple_xy=[0, 0]),
         city_placements=[],
@@ -22,7 +22,7 @@ tile_types = {
                                          city_connections=[])],
     ),
     "B": Tile(
-        image=os.path.join("base_game", "B.png"),
+        tile_type="B",
         borders=[ShapeType.FIELD, ShapeType.FIELD, ShapeType.FIELD, ShapeType.FIELD],
         monastery_placement=MonasteryPlacement(meeple_xy=[0, 0]),
         city_placements=[],
@@ -35,7 +35,7 @@ tile_types = {
 
     ),
     "C": Tile(
-        image=os.path.join("base_game", "C.png"),
+        tile_type="C",
         borders=[ShapeType.CITY, ShapeType.CITY, ShapeType.CITY, ShapeType.CITY],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeConnection.U, EdgeConnection.D, EdgeConnection.R,
@@ -46,7 +46,7 @@ tile_types = {
         field_placements=[],
     ),
     "D": Tile(
-        image=os.path.join("base_game", "D.png"),
+        tile_type="D",
         borders=[ShapeType.CITY, ShapeType.ROAD, ShapeType.FIELD, ShapeType.ROAD],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeConnection.U],
@@ -64,7 +64,7 @@ tile_types = {
 
     ),
     "E": Tile(
-        image=os.path.join("base_game", "E.png"),
+        tile_type="E",
         borders=[ShapeType.CITY, ShapeType.FIELD, ShapeType.FIELD, ShapeType.FIELD],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeConnection.U],
@@ -77,7 +77,7 @@ tile_types = {
                                          city_connections=[0])],
     ),
     "F": Tile(
-        image=os.path.join("base_game", "F.png"),
+        tile_type="F",
         borders=[ShapeType.FIELD, ShapeType.CITY, ShapeType.FIELD, ShapeType.CITY],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeConnection.R, EdgeConnection.L],
@@ -92,7 +92,7 @@ tile_types = {
                                          city_connections=[0])],
     ),
     "G": Tile(
-        image=os.path.join("base_game", "G.png"),
+        tile_type="G",
         borders=[ShapeType.FIELD, ShapeType.CITY, ShapeType.FIELD, ShapeType.CITY],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeConnection.R, EdgeConnection.L],
@@ -107,7 +107,7 @@ tile_types = {
                                          city_connections=[0])],
     ),
     "H": Tile(
-        image=os.path.join("base_game", "H.png"),
+        tile_type="H",
         borders=[ShapeType.CITY, ShapeType.FIELD, ShapeType.CITY, ShapeType.FIELD],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeConnection.U],
@@ -123,7 +123,7 @@ tile_types = {
                                          city_connections=[0, 1])],
     ),
     "I": Tile(
-        image=os.path.join("base_game", "I.png"),
+        tile_type="I",
         borders=[ShapeType.CITY, ShapeType.FIELD, ShapeType.FIELD, ShapeType.CITY],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeConnection.U],
@@ -139,7 +139,7 @@ tile_types = {
                                          city_connections=[0, 1])],
     ),
     "J": Tile(
-        image=os.path.join("base_game", "J.png"),
+        tile_type="J",
         borders=[ShapeType.CITY, ShapeType.ROAD, ShapeType.ROAD, ShapeType.FIELD],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeConnection.U],
@@ -157,7 +157,7 @@ tile_types = {
                           ],
     ),
     "K": Tile(
-        image=os.path.join("base_game", "K.png"),
+        tile_type="K",
         borders=[ShapeType.CITY, ShapeType.FIELD, ShapeType.ROAD, ShapeType.ROAD],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeConnection.U],
@@ -175,7 +175,7 @@ tile_types = {
                           ],
     ),
     "L": Tile(
-        image=os.path.join("base_game", "L.png"),
+        tile_type="L",
         borders=[ShapeType.CITY, ShapeType.ROAD, ShapeType.ROAD, ShapeType.ROAD],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeConnection.U],
@@ -197,7 +197,7 @@ tile_types = {
                                          meeple_xy=[20, 20],
                                          city_connections=[])]),
     "M": Tile(
-        image=os.path.join("base_game", "M.png"),
+        tile_type="M",
         borders=[ShapeType.CITY, ShapeType.CITY, ShapeType.FIELD, ShapeType.FIELD],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeConnection.U, EdgeConnection.R],
@@ -209,7 +209,7 @@ tile_types = {
                                          meeple_xy=[-12, 12],
                                          city_connections=[0])]),
     "N": Tile(
-        image=os.path.join("base_game", "N.png"),
+        tile_type="N",
         borders=[ShapeType.CITY, ShapeType.CITY, ShapeType.FIELD, ShapeType.FIELD],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeConnection.U, EdgeConnection.R],
@@ -221,7 +221,7 @@ tile_types = {
                                          meeple_xy=[-12, 12],
                                          city_connections=[0])]),
     "O": Tile(
-        image=os.path.join("base_game", "O.png"),
+        tile_type="O",
         borders=[ShapeType.CITY, ShapeType.ROAD, ShapeType.ROAD, ShapeType.CITY],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeConnection.U, EdgeConnection.L],
@@ -236,7 +236,7 @@ tile_types = {
                                          meeple_xy=[22, 22],
                                          city_connections=[])]),
     "P": Tile(
-        image=os.path.join("base_game", "P.png"),
+        tile_type="P",
         borders=[ShapeType.CITY, ShapeType.ROAD, ShapeType.ROAD, ShapeType.CITY],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeConnection.U, EdgeConnection.L],
@@ -251,7 +251,7 @@ tile_types = {
                                          meeple_xy=[22, 22],
                                          city_connections=[])]),
     "Q": Tile(
-        image=os.path.join("base_game", "Q.png"),
+        tile_type="Q",
         borders=[ShapeType.CITY, ShapeType.CITY, ShapeType.FIELD, ShapeType.CITY],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeConnection.U, EdgeConnection.L, EdgeConnection.R],
@@ -262,7 +262,7 @@ tile_types = {
                                          meeple_xy=[0, 22],
                                          city_connections=[0])]),
     "R": Tile(
-        image=os.path.join("base_game", "R.png"),
+        tile_type="R",
         borders=[ShapeType.CITY, ShapeType.CITY, ShapeType.FIELD, ShapeType.CITY],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeConnection.U, EdgeConnection.L, EdgeConnection.R],
@@ -273,7 +273,7 @@ tile_types = {
                                          meeple_xy=[0, 22],
                                          city_connections=[0])]),
     "S": Tile(
-        image=os.path.join("base_game", "S.png"),
+        tile_type="S",
         borders=[ShapeType.CITY, ShapeType.CITY, ShapeType.ROAD, ShapeType.CITY],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeConnection.U, EdgeConnection.L, EdgeConnection.R],
@@ -289,7 +289,7 @@ tile_types = {
                                          city_connections=[0])
                           ]),
     "T": Tile(
-        image=os.path.join("base_game", "T.png"),
+        tile_type="T",
         borders=[ShapeType.CITY, ShapeType.CITY, ShapeType.ROAD, ShapeType.CITY],
         monastery_placement=None,
         city_placements=[CityPlacement(connections=[EdgeConnection.U, EdgeConnection.L, EdgeConnection.R],
@@ -305,7 +305,7 @@ tile_types = {
                                          city_connections=[0])
                           ]),
     "U": Tile(
-        image=os.path.join("base_game", "U.png"),
+        tile_type="U",
         borders=[ShapeType.ROAD, ShapeType.FIELD, ShapeType.ROAD, ShapeType.FIELD],
         monastery_placement=None,
         city_placements=[],
@@ -320,7 +320,7 @@ tile_types = {
                                          meeple_xy=[-19, 0],
                                          city_connections=[])]),
     "V": Tile(
-        image=os.path.join("base_game", "V.png"),
+        tile_type="V",
         borders=[ShapeType.FIELD, ShapeType.FIELD, ShapeType.ROAD, ShapeType.ROAD],
         monastery_placement=None,
         city_placements=[],
@@ -334,7 +334,7 @@ tile_types = {
                                          meeple_xy=[-20, 17],
                                          city_connections=[])]),
     "W": Tile(
-        image=os.path.join("base_game", "W.png"),
+        tile_type="W",
         borders=[ShapeType.FIELD, ShapeType.ROAD, ShapeType.ROAD, ShapeType.ROAD],
         monastery_placement=None,
         city_placements=[],
@@ -355,7 +355,7 @@ tile_types = {
                                          meeple_xy=[22, 20],
                                          city_connections=[])]),
     "X": Tile(
-        image=os.path.join("base_game", "X.png"),
+        tile_type="X",
         borders=[ShapeType.ROAD, ShapeType.ROAD, ShapeType.ROAD, ShapeType.ROAD],
         monastery_placement=None,
         city_placements=[],

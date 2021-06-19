@@ -12,13 +12,17 @@ class RoadPlacement(Placement):
         super().__init__(meeple_xy)
         self.connections: [EdgeConnection] = connections
         super(RoadPlacement, self).duplicate_connections()
-        self.road: Road = None
 
     def __str__(self):
         return f"ROAD :: {list(map(lambda l: l.name, self.connections))}"
 
     def __repr__(self):
         return self.__str__()
+
+    def copy(self):
+        my_copy: RoadPlacement = super(RoadPlacement, self).copy()
+        my_copy.__class__ = self.__class__
+        return my_copy
 
 
 class Road(Shape):
@@ -38,3 +42,4 @@ class Road(Shape):
         placement: RoadPlacement
         for placement in self.placements:
             print(f"\t\t{placement}")
+

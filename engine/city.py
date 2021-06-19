@@ -8,7 +8,7 @@ class CityPlacement(Placement):
         super().__init__(meeple_xy)
         self.connections: [EdgeConnection] = connections
         super(CityPlacement, self).duplicate_connections()
-        self.score: int = 2 if shield else 1
+        self.has_shield: bool = shield
         self.shape: City = None
 
     def __str__(self):
@@ -17,13 +17,19 @@ class CityPlacement(Placement):
     def __repr__(self):
         return self.__str__()
 
+    def copy(self):
+        my_copy: CityPlacement = super(CityPlacement, self).copy()
+        my_copy.__class__ = self.__class__
+        my_copy.has_shield = self.has_shield
+        return my_copy
+
 
 class City(Shape):
     def __init__(self, placement: CityPlacement, coords, n_players):
         super().__init__(placement, coords, n_players)
 
     def score(self):
-        score = sum(map(lambda p: p.score, self.placements))
+        score = sum(map(lambda p: 2 if p.has_shield else 1, self.placements))
         if self.completed:
             score = score*2
         return score

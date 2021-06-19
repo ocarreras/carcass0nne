@@ -44,6 +44,7 @@ class Monastery(Shape):
     def print(self):
         print(self)
 
+
 class MonasteryPlacement(Placement):
     def __init__(self, meeple_xy):
         super().__init__(meeple_xy)
@@ -56,3 +57,8 @@ class MonasteryPlacement(Placement):
             return f"Monastery S:{self.shape.neighbours} M:{self.meeple}"
         else:
             return f"Monastery"
+
+    def copy(self):
+        my_copy: MonasteryPlacement = super(MonasteryPlacement, self).copy()
+        my_copy.__class__ = self.__class__
+        return my_copy
