@@ -20,6 +20,7 @@ tile_types = {
                                                       EdgeConnection.LU, EdgeConnection.LD],
                                          meeple_xy=[20, -20],
                                          city_connections=[])],
+        rotations=[0]
     ),
     "B": Tile(
         tile_type="B",
@@ -32,7 +33,7 @@ tile_types = {
                                                       EdgeConnection.LU, EdgeConnection.LD],
                                          meeple_xy=[20, -20],
                                          city_connections=[])],
-
+        rotations=[0]
     ),
     "C": Tile(
         tile_type="C",
@@ -44,6 +45,7 @@ tile_types = {
                                        meeple_xy=[0, 0])],
         road_placements=[],
         field_placements=[],
+        rotations=[0, 1, 2, 3]
     ),
     "D": Tile(
         tile_type="D",
@@ -61,6 +63,7 @@ tile_types = {
                                                       EdgeConnection.DR],
                                          meeple_xy=[15, 16],
                                          city_connections=[])],
+        rotations=[0, 1, 2, 3]
 
     ),
     "E": Tile(
@@ -75,6 +78,7 @@ tile_types = {
                                                       EdgeConnection.DR, EdgeConnection.LU, EdgeConnection.LD],
                                          meeple_xy=[0, 10],
                                          city_connections=[0])],
+        rotations=[0, 1, 2, 3]
     ),
     "F": Tile(
         tile_type="F",
@@ -90,6 +94,7 @@ tile_types = {
                           FieldPlacement(connections=[EdgeConnection.DL, EdgeConnection.DR],
                                          meeple_xy=[0, 26],
                                          city_connections=[0])],
+        rotations=[0, 1, 2, 3]
     ),
     "G": Tile(
         tile_type="G",
@@ -105,6 +110,7 @@ tile_types = {
                           FieldPlacement(connections=[EdgeConnection.DL, EdgeConnection.DR],
                                          meeple_xy=[0, 26],
                                          city_connections=[0])],
+        rotations=[0, 1, 2, 3]
     ),
     "H": Tile(
         tile_type="H",
@@ -121,6 +127,7 @@ tile_types = {
                                                       EdgeConnection.LD],
                                          meeple_xy=[0, 0],
                                          city_connections=[0, 1])],
+        rotations=[0, 1, 2, 3]
     ),
     "I": Tile(
         tile_type="I",
@@ -137,6 +144,7 @@ tile_types = {
                                                       EdgeConnection.DR],
                                          meeple_xy=[5, 5],
                                          city_connections=[0, 1])],
+        rotations=[0, 1, 2, 3]
     ),
     "J": Tile(
         tile_type="J",
@@ -155,6 +163,7 @@ tile_types = {
                                          meeple_xy=[22, 22],
                                          city_connections=[]),
                           ],
+        rotations=[0, 1, 2, 3]
     ),
     "K": Tile(
         tile_type="K",
@@ -173,6 +182,7 @@ tile_types = {
                                          meeple_xy=[-15, 15],
                                          city_connections=[]),
                           ],
+        rotations=[0, 1, 2, 3]
     ),
     "L": Tile(
         tile_type="L",
@@ -195,7 +205,9 @@ tile_types = {
                                          city_connections=[]),
                           FieldPlacement(connections=[EdgeConnection.RD, EdgeConnection.DR],
                                          meeple_xy=[20, 20],
-                                         city_connections=[])]),
+                                         city_connections=[])],
+        rotations=[0, 1, 2, 3]
+    ),
     "M": Tile(
         tile_type="M",
         borders=[ShapeType.CITY, ShapeType.CITY, ShapeType.FIELD, ShapeType.FIELD],
@@ -207,7 +219,9 @@ tile_types = {
         field_placements=[FieldPlacement(connections=[EdgeConnection.LU, EdgeConnection.LD, EdgeConnection.DL,
                                                       EdgeConnection.DR],
                                          meeple_xy=[-12, 12],
-                                         city_connections=[0])]),
+                                         city_connections=[0])],
+        rotations=[0, 1, 2, 3]
+    ),
     "N": Tile(
         tile_type="N",
         borders=[ShapeType.CITY, ShapeType.CITY, ShapeType.FIELD, ShapeType.FIELD],
@@ -219,7 +233,9 @@ tile_types = {
         field_placements=[FieldPlacement(connections=[EdgeConnection.LU, EdgeConnection.LD, EdgeConnection.DL,
                                                       EdgeConnection.DR],
                                          meeple_xy=[-12, 12],
-                                         city_connections=[0])]),
+                                         city_connections=[0])],
+        rotations=[0, 1, 2, 3]
+    ),
     "O": Tile(
         tile_type="O",
         borders=[ShapeType.CITY, ShapeType.ROAD, ShapeType.ROAD, ShapeType.CITY],
@@ -234,7 +250,9 @@ tile_types = {
                                          city_connections=[0]),
                           FieldPlacement(connections=[EdgeConnection.RD, EdgeConnection.DR],
                                          meeple_xy=[22, 22],
-                                         city_connections=[])]),
+                                         city_connections=[])],
+        rotations=[0, 1, 2, 3]
+    ),
     "P": Tile(
         tile_type="P",
         borders=[ShapeType.CITY, ShapeType.ROAD, ShapeType.ROAD, ShapeType.CITY],
@@ -249,7 +267,9 @@ tile_types = {
                                          city_connections=[0]),
                           FieldPlacement(connections=[EdgeConnection.RD, EdgeConnection.DR],
                                          meeple_xy=[22, 22],
-                                         city_connections=[])]),
+                                         city_connections=[])],
+        rotations=[0, 1, 2, 3]
+    ),
     "Q": Tile(
         tile_type="Q",
         borders=[ShapeType.CITY, ShapeType.CITY, ShapeType.FIELD, ShapeType.CITY],
@@ -260,7 +280,9 @@ tile_types = {
         road_placements=[],
         field_placements=[FieldPlacement(connections=[EdgeConnection.DL, EdgeConnection.DR],
                                          meeple_xy=[0, 22],
-                                         city_connections=[0])]),
+                                         city_connections=[0])],
+        rotations=[0, 1, 2, 3]
+    ),
     "R": Tile(
         tile_type="R",
         borders=[ShapeType.CITY, ShapeType.CITY, ShapeType.FIELD, ShapeType.CITY],
@@ -271,7 +293,9 @@ tile_types = {
         road_placements=[],
         field_placements=[FieldPlacement(connections=[EdgeConnection.DL, EdgeConnection.DR],
                                          meeple_xy=[0, 22],
-                                         city_connections=[0])]),
+                                         city_connections=[0])],
+        rotations=[0, 1, 2, 3]
+    ),
     "S": Tile(
         tile_type="S",
         borders=[ShapeType.CITY, ShapeType.CITY, ShapeType.ROAD, ShapeType.CITY],
@@ -287,7 +311,9 @@ tile_types = {
                           FieldPlacement(connections=[EdgeConnection.DR],
                                          meeple_xy=[15, 23],
                                          city_connections=[0])
-                          ]),
+                          ],
+        rotations=[0, 1, 2, 3]
+    ),
     "T": Tile(
         tile_type="T",
         borders=[ShapeType.CITY, ShapeType.CITY, ShapeType.ROAD, ShapeType.CITY],
@@ -303,7 +329,9 @@ tile_types = {
                           FieldPlacement(connections=[EdgeConnection.DR],
                                          meeple_xy=[15, 23],
                                          city_connections=[0])
-                          ]),
+                          ],
+        rotations=[0, 1, 2, 3]
+    ),
     "U": Tile(
         tile_type="U",
         borders=[ShapeType.ROAD, ShapeType.FIELD, ShapeType.ROAD, ShapeType.FIELD],
@@ -318,7 +346,9 @@ tile_types = {
                           FieldPlacement(connections=[EdgeConnection.UL, EdgeConnection.LU, EdgeConnection.LD,
                                                       EdgeConnection.DL],
                                          meeple_xy=[-19, 0],
-                                         city_connections=[])]),
+                                         city_connections=[])],
+        rotations=[0, 1]
+    ),
     "V": Tile(
         tile_type="V",
         borders=[ShapeType.FIELD, ShapeType.FIELD, ShapeType.ROAD, ShapeType.ROAD],
@@ -332,7 +362,9 @@ tile_types = {
                                          city_connections=[]),
                           FieldPlacement(connections=[EdgeConnection.LD, EdgeConnection.DL],
                                          meeple_xy=[-20, 17],
-                                         city_connections=[])]),
+                                         city_connections=[])],
+        rotations=[0, 1, 2, 3]
+    ),
     "W": Tile(
         tile_type="W",
         borders=[ShapeType.FIELD, ShapeType.ROAD, ShapeType.ROAD, ShapeType.ROAD],
@@ -353,7 +385,9 @@ tile_types = {
                                          city_connections=[]),
                           FieldPlacement(connections=[EdgeConnection.RD, EdgeConnection.DR],
                                          meeple_xy=[22, 20],
-                                         city_connections=[])]),
+                                         city_connections=[])],
+        rotations=[0, 1, 2, 3]
+    ),
     "X": Tile(
         tile_type="X",
         borders=[ShapeType.ROAD, ShapeType.ROAD, ShapeType.ROAD, ShapeType.ROAD],
@@ -379,7 +413,9 @@ tile_types = {
                                          city_connections=[]),
                           FieldPlacement(connections=[EdgeConnection.RD, EdgeConnection.DR],
                                          meeple_xy=[20, 20],
-                                         city_connections=[])])
+                                         city_connections=[])],
+        rotations=[0, 1, 2, 3]
+    )
 }
 
 ##

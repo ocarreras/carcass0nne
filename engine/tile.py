@@ -15,7 +15,8 @@ class Tile:
                  road_placements: [RoadPlacement] = None,
                  field_placements: [FieldPlacement] = None,
                  monastery_placement: MonasteryPlacement = None,
-                 tile_type: str = None):
+                 tile_type: str = None,
+                 rotations: [int] = None):
         self.borders: [ShapeType] = borders
         self.placements: Dict[ShapeType, list] = {
             ShapeType.CITY: city_placements,
@@ -30,6 +31,7 @@ class Tile:
         self.tile_type = tile_type
         self.rotation = 0
         self.coords = 0
+        self.rotations = rotations
 
     def copy(self):
         my_copy = Tile()
@@ -42,6 +44,7 @@ class Tile:
         my_copy.tile_type = self.tile_type
         my_copy.rotation = self.rotation
         my_copy.coords = self.coords
+        my_copy.rotations = self.rotations
         return my_copy
 
     # Place tile at coords/rotation, initialize all placemetns.

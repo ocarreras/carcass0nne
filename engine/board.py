@@ -57,7 +57,7 @@ class Board(MutableMapping):
     def get_available_tile_placements(self, tile: Tile):
         placements = []
         for coords in self.freeSquares:
-            for rotation in range(4):
+            for rotation in tile.rotations:
                 if self.fits(tile, coords, rotation):
                     placements.append((coords, rotation))
         return placements
