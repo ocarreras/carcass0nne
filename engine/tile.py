@@ -1,12 +1,11 @@
 from typing import Dict
 
+from engine.placement import EdgeConnection, BorderOrientation, Placement, ShapeType
+from engine.city import CityPlacement
+from engine.road import RoadPlacement
+from engine.field import FieldPlacement
+from engine.monastery import MonasteryPlacement
 from engine.coords import Coords
-from engine.placement import EdgeConnection, BorderOrientation, Placement
-from engine.city import City, CityPlacement
-from engine.road import Road, RoadPlacement
-from engine.field import Field, FieldPlacement
-from engine.monastery import Monastery, MonasteryPlacement
-from engine.shape import ShapeType
 
 
 class Tile:
@@ -47,7 +46,7 @@ class Tile:
         my_copy.rotations = self.rotations
         return my_copy
 
-    # Place tile at coords/rotation, initialize all placemetns.
+    # Place tile at coords/rotation, initialize all placements.
     def place(self, board, coords: Coords, rotation: int, n_players: int):
         self.coords = coords
         self.rotation = rotation
@@ -59,20 +58,16 @@ class Tile:
     def __initialize_placements(self, board, coords: Coords, n_players):
         for cityPlacement in self.placements[ShapeType.CITY]:
             cityPlacement: CityPlacement
-            cityPlacement.initialize(self.rotation)
-            cityPlacement.shape = City(cityPlacement, coords, n_players)
+            cityPlacement.initialize_shape(coords, self.rotation, n_players)
         for monasteryPlacement in self.placements[ShapeType.MONASTERY]:
             monasteryPlacement: MonasteryPlacement
-            monasteryPlacement.shape = Monastery(monasteryPlacement, coords, n_players)
-            monasteryPlacement.shape.initialize(board, coords)
+            monasteryPlacement.initialize_shape(coords, self.rotation, n_players, board)
         for roadPlacement in self.placements[ShapeType.ROAD]:
             roadPlacement: RoadPlacement
-            roadPlacement.initialize(self.rotation)
-            roadPlacement.shape = Road(roadPlacement, coords, n_players)
+            roadPlacement.initialize_shape(coords, self.rotation, n_players)
         for fieldPlacement in self.placements[ShapeType.FIELD]:
             fieldPlacement: FieldPlacement
-            fieldPlacement.initialize_field(self.rotation, self.placements[ShapeType.CITY])
-            fieldPlacement.shape = Field(fieldPlacement, coords, n_players)
+            fieldPlacement.initialize_shape(coords, self.rotation, n_players, self.placements[ShapeType.CITY])
 
     ##
     # Initialize connections maps, so we can access placements through U D R L maps
@@ -96,4 +91,4 @@ class Tile:
         return self.borders[(orientation - self.rotation) % 4]
 
     def __str__(self):
-        return f"Tile: {self.tile_name} R:{self.rotation}"
+        return f"Tile: {self.tile_type} R:{self.rotation}"

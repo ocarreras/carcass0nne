@@ -4,7 +4,6 @@ from engine.game import Game
 from engine.tile import Tile
 import copy
 
-@profile
 def simulate_random_game(game: Game, do_visualize=True, show_score=True):
     s = game.start()
     while len(game.state.deck) > 0:
@@ -30,7 +29,7 @@ def simulate_random_game(game: Game, do_visualize=True, show_score=True):
 
 
 def simulate_games(game: Game):
-    for i in range(50):
+    for i in range(350):
         game.start()
         print(i)
         simulate_random_game(game, False, False)
@@ -38,7 +37,7 @@ def simulate_games(game: Game):
 
 if __name__ == "__main__":
     game = Game(create_ui=True)
-    parser = argparse.ArgumentParser(description="Simple program to test gui/engine")
+    parser = argparse.ArgumentParser(description="Simple program to test gui/etime python Carcassonne.py 1 350ngine")
     parser.add_argument('--mode', help='[random|interactive].', default='random')
     args = parser.parse_args()
     if args.mode == "random":

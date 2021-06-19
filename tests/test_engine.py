@@ -4,8 +4,7 @@ from engine.tile_sets.base_deck import tile_types
 from engine.coords import Coords
 from engine.game_state import GameState
 from engine.game_ui import Gui
-from engine.shape import Shape, ShapeType
-import copy
+from engine.placement import ShapeType
 
 
 def render_loop(gs):
@@ -17,7 +16,7 @@ def render_loop(gs):
 def insert_tile(gs, tile_name, coord_tuple, rotation):
     coords = Coords(*coord_tuple)
     gs.insert_tile(coords,
-                   copy.deepcopy(tile_types[tile_name]),
+                   tile_types[tile_name].copy(),
                    rotation,
                    None
                    )
@@ -49,15 +48,15 @@ def test_road_connection():
     render_loop(gs)
 """
 
-
 def test_autocompleted_city():
     gs = GameState(2)
-    tile = copy.deepcopy(tile_types["D"])
+    tile = tile_types["D"].copy()
     tile_placements = gs.get_available_tile_placements(tile)
     assert (Coords(-1, 0), 2) in tile_placements
     meeple_placements = gs.get_available_meeple_placements(tile, Coords(-1, 0), 2)
     assert tile.placements[ShapeType.CITY][0] in meeple_placements
     gs.insert_tile(Coords(-1, 0), tile, 2, tile.placements[ShapeType.CITY][0])
+    gs.print_open_shapes()
     assert gs.scores[0] == 4
     assert gs.meeples[0] == gs.meeples[1]
     assert tile.placements[ShapeType.CITY][0].meeple is None
@@ -76,6 +75,7 @@ def create_monastery_donut(gs):
     insert_tiles(test_tile_info, gs)
 
 
+
 def test_autocompleted_monastery():
     gs = GameState(2)
     create_monastery_donut(gs)
@@ -90,7 +90,6 @@ def test_autocompleted_monastery():
     assert gs.scores[0] == 0
     assert gs.meeples[0] == gs.meeples[1]
     assert monastery_placement.meeple is None
-
 
 def test_monastery_completion():
     gs = GameState(2)

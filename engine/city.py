@@ -1,6 +1,5 @@
 from __future__ import annotations
 from engine.placement import Placement, Edge, EdgeConnection
-from engine.shape import Shape
 
 
 class CityPlacement(Placement):
@@ -9,13 +8,9 @@ class CityPlacement(Placement):
         self.connections: [EdgeConnection] = connections
         super(CityPlacement, self).duplicate_connections()
         self.has_shield: bool = shield
-        self.shape: City = None
 
-    def __str__(self):
-        return f"CITY :: {list(map(lambda l: l.name, self.connections))}"
-
-    def __repr__(self):
-        return self.__str__()
+    def initialize_shape(self, coords, rotation, n_players):
+        super(CityPlacement, self).initialize_shape(coords, rotation, n_players)
 
     def copy(self):
         my_copy: CityPlacement = super(CityPlacement, self).copy()
@@ -23,20 +18,11 @@ class CityPlacement(Placement):
         my_copy.has_shield = self.has_shield
         return my_copy
 
-
-class City(Shape):
-    def __init__(self, placement: CityPlacement, coords, n_players):
-        super().__init__(placement, coords, n_players)
-
     def score(self):
-        score = sum(map(lambda p: 2 if p.has_shield else 1, self.placements))
+        score = sum(map(lambda p: 2 if p.has_shield else 1, self.shape_placements))
         if self.completed:
             score = score*2
         return score
-
-    def __str__(self):
-        return f"CITY {hex(id(self))} {self.coords} #{len(self.placements):02d} " + \
-               ("COMPLETED" if self.completed else "OPEN")
 
     def print(self):
         print(self)
@@ -46,5 +32,15 @@ class City(Shape):
                 print(f"\t\t{edge}")
         print("\tPLACEMENTS")
         placement: CityPlacement
-        for placement in self.placements:
+        for placement in self.shape_placements:
             print(f"\t\t{placement}")
+
+    def __str__(self):
+        return f"CITY :: {list(map(lambda l: l.name, self.connections))}"
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return f"CITY {hex(id(self))} {self.coords} #{len(self.shape_placements):02d} " + \
+               ("COMPLETED" if self.completed else "OPEN")

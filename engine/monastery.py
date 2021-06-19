@@ -1,15 +1,25 @@
 from __future__ import annotations
 from engine.placement import Placement
-from engine.coords import Coords
-from engine.shape import Shape
 
 
-class Monastery(Shape):
-    def __init__(self, placement: MonasteryPlacement, coords, n_players):
-        super().__init__(placement, coords, n_players)
+class MonasteryPlacement(Placement):
+    def __init__(self, meeple_xy):
+        super().__init__(meeple_xy)
+        self.completed = False
+        self.connections = []
         self.neighbours = 0
 
-    def initialize(self, board, coords: Coords):
+    def copy(self):
+        my_copy: MonasteryPlacement = super(MonasteryPlacement, self).copy()
+        my_copy.__class__ = self.__class__
+        my_copy.neighbours = self.neighbours
+        my_copy.connections = self.connections
+        return my_copy
+
+    def initialize_shape(self, coords, rotation: int, n_players: int, board=None):
+        super(MonasteryPlacement, self).initialize_shape(coords, rotation, n_players)
+        #self.coords = None
+
         if coords.up() in board:
             self.neighbours += 1
         if coords.up().left() in board:
@@ -43,22 +53,3 @@ class Monastery(Shape):
 
     def print(self):
         print(self)
-
-
-class MonasteryPlacement(Placement):
-    def __init__(self, meeple_xy):
-        super().__init__(meeple_xy)
-        self.completed = False
-        self.shape = None
-        self.connections = []
-
-    def __str__(self):
-        if self.shape:
-            return f"Monastery S:{self.shape.neighbours} M:{self.meeple}"
-        else:
-            return f"Monastery"
-
-    def copy(self):
-        my_copy: MonasteryPlacement = super(MonasteryPlacement, self).copy()
-        my_copy.__class__ = self.__class__
-        return my_copy

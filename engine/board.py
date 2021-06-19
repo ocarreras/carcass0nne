@@ -4,10 +4,7 @@ from collections.abc import MutableMapping
 from engine.coords import Coords
 from engine.tile import Tile
 from engine.placement import EdgeConnection, BorderOrientation
-from engine.city import City
-from engine.road import Road
-from engine.placement import Placement
-from engine.shape import Shape, ShapeType
+from engine.placement import Placement, ShapeType
 
 
 class Board(MutableMapping):
@@ -54,14 +51,13 @@ class Board(MutableMapping):
             return False
         return True
 
-    def get_available_tile_placements(self, tile: Tile):
+    def get_available_tile_placements(self, tile):
         placements = []
         for coords in self.freeSquares:
             for rotation in tile.rotations:
                 if self.fits(tile, coords, rotation):
                     placements.append((coords, rotation))
         return placements
-
 
     def __get_connected_placement(self, shape_type: ShapeType, coords: Coords, connection: EdgeConnection) \
             -> Placement:
@@ -98,17 +94,8 @@ class Board(MutableMapping):
                 return self.board[coords.left()].connections[shape_type][EdgeConnection.RU]
             return None
 
-    def get_connected_city(self, coords: Coords, connection: EdgeConnection) -> City:
-        placement = self.__get_connected_placement(ShapeType.CITY, coords, connection)
-        return placement.shape if placement else None
-
-    def get_connected_road(self, coords: Coords, connection: EdgeConnection) -> Road:
-        placement = self.__get_connected_placement(ShapeType.ROAD, coords, connection)
-        return placement.shape if placement else None
-
-    def get_connected_shape(self, shape_type: ShapeType, coords: Coords, connection: EdgeConnection) -> Shape:
-        placement = self.__get_connected_placement(shape_type, coords, connection)
-        return placement.shape if placement else None
+    def get_connected_placement(self, shape_type: ShapeType, coords: Coords, connection: EdgeConnection) -> Placement:
+        return self.__get_connected_placement(shape_type, coords, connection)
 
     def __update_free_squares(self, coords: Coords):
         self.freeSquares.remove(coords)
