@@ -15,8 +15,10 @@ def render_loop(gs):
 
 def insert_tile(gs, tile_name, coord_tuple, rotation):
     coords = Coords(*coord_tuple)
+    new_tile = tile_types[tile_name].copy()
+    gs.next_tile = new_tile
     gs.insert_tile(coords,
-                   tile_types[tile_name].copy(),
+                   new_tile,
                    rotation,
                    None
                    )
@@ -55,6 +57,7 @@ def test_autocompleted_city():
     assert (Coords(-1, 0), 2) in tile_placements
     meeple_placements = gs.get_available_meeple_placements(tile, Coords(-1, 0), 2)
     assert tile.placements[ShapeType.CITY][0] in meeple_placements
+    gs.next_tile = tile
     gs.insert_tile(Coords(-1, 0), tile, 2, tile.placements[ShapeType.CITY][0])
     gs.print_open_shapes()
     assert gs.scores[0] == 4
@@ -85,6 +88,7 @@ def test_autocompleted_monastery():
     meeple_placements = gs.get_available_meeple_placements(tile, Coords(1, 0), 0)
     monastery_placement = tile.placements[ShapeType.MONASTERY][0]
     assert monastery_placement in meeple_placements
+    gs.next_tile = tile
     gs.insert_tile(Coords(1, 0), tile, 0, monastery_placement)
     assert gs.scores[1] == 9
     assert gs.scores[0] == 0
@@ -97,6 +101,7 @@ def test_monastery_completion():
     meeple_placements = gs.get_available_meeple_placements(tile, Coords(1, 0), 0)
     monastery_placement = tile.placements[ShapeType.MONASTERY][0]
     assert monastery_placement in meeple_placements
+    gs.next_tile = tile
     gs.insert_tile(Coords(1, 0), tile, 0, monastery_placement)
     create_monastery_donut(gs)
     assert gs.scores[0] == 9
@@ -122,6 +127,7 @@ def test_autocomplete_road():
     assert (Coords(1, 0), 1) in tile_placements
     meeple_placements = gs.get_available_meeple_placements(tile, Coords(1, 0), 0)
     assert road_placement in meeple_placements
+    gs.next_tile = tile
     gs.insert_tile(Coords(1, 0), tile, 1, road_placement)
     assert gs.scores[0] == 6
     assert gs.scores[1] == 0
@@ -139,6 +145,7 @@ def test_road_completion():
     assert (Coords(0, 1), 0) in tile_placements
     meeple_placements = gs.get_available_meeple_placements(tile, Coords(0, 1), 0)
     assert road_placement in meeple_placements
+    gs.next_tile = tile
     gs.insert_tile(Coords(0, 1), tile, 0, road_placement)
     test_tile_info = [
         ("V", (1, 1), 1),

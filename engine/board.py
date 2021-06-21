@@ -5,12 +5,29 @@ from engine.coords import Coords
 from engine.tile import Tile
 from engine.placement import EdgeConnection, BorderOrientation
 from engine.placement import Placement, ShapeType
+import numpy as np
 
+##
+# TODO: Refactor this
+BOARD_LENGTH = 10
+
+ML_BOARD_FEATURES = 14
+ML_BOARD_SIZE = 2 * BOARD_LENGTH + 1
 
 class Board(MutableMapping):
     def __init__(self):
         self.board: Dict[Coords, Tile] = {}
         self.freeSquares = []
+        self.ml_board = []
+        self.ML_BOARD_SIZE = ML_BOARD_SIZE
+        self.ML_BOARD_FEATURES = ML_BOARD_FEATURES
+        self.ml_board = np.zeros((self.ML_BOARD_FEATURES, self.ML_BOARD_SIZE, self.ML_BOARD_SIZE))
+
+    @staticmethod
+    def getActionSize():
+        ##
+        # This is huge!
+        return 1 + ML_BOARD_FEATURES * ML_BOARD_SIZE * ML_BOARD_SIZE * 4
 
     def init(self, initial_coords: Coords, first_tile: Tile):
         self.board: Dict[Coords, Tile] = {initial_coords: first_tile}
@@ -20,13 +37,27 @@ class Board(MutableMapping):
             initial_coords.right(),
             initial_coords.left()
         ]
+        self.ml_board[0][initial_coords.y][initial_coords.x] = first_tile.tile_num()
 
     def copy(self):
         my_copy = Board()
-        my_copy.board = self.board.copy()
-        my_copy.freeSquares = self.freeSquares.copy()
+        for key in self.board:
+            my_copy.board[key] = self.board[key].copy()
+        my_copy.freeSquares = []
+        for freeSquare in self.freeSquares:
+            my_copy.freeSquares.append(freeSquare.copy())
+        my_copy.ml_board = self.ml_board.copy()
+
+        return my_copy
+
+    def insert_meeple_ml(self, coords, placement_ind, ml_player):
+        self.ml_board[placement_ind][coords.y][coords.x] = ml_player
+
+    def remove_meeple_ml(self, coords, placement_ind):
+        self.ml_board[placement_ind][coords.y][coords.x] = 0
 
     def insert_tile(self, coords: Coords, tile: Tile):
+        self.ml_board[0][coords.y][coords.x] = 1 + tile.tile_num()
         self.board[coords] = tile
         self.__update_free_squares(coords)
 
@@ -111,17 +142,25 @@ class Board(MutableMapping):
     def __getitem__(self, key):
         return self.board[key] if key in self.board else None
 
-    def __setitem__(self, key, val):
+    def __setitem__(self, key, val: Tile):
         self.board[key] = val
+        if val:
+            self.ml_board[0][key.y][key.x] = val.tile_num()
+        else:
+            print("!!!INSERTING NONE!! WTF WTF WTF")
+            self.ml_board[0][key.y][key.x] = 0
 
     def __contains__(self, key):
         return key in self.board
 
     def __delitem__(self, key):
+        print("DELETING ITEM")
+        self.ml_board[0][key.y][key.x] = 0
         del self.board[key]
 
     def __len__(self, key):
         return len(self.board)
 
     def __iter__(self):
+        print("ITERING ...")
         return iter(self.board)

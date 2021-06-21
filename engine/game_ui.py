@@ -7,6 +7,26 @@ from engine.tile import Tile
 from engine.coords import Coords
 from PIL import ImageTk, Image
 
+import numpy as np
+from agents.alpha0.utils import *
+from agents.alpha0.MCTS import MCTS
+from agents.alpha0.nn.NNet import NNetWrapper as nn
+
+args = dotdict({
+    'numIters': 1000,
+    'numEps': 2,              # Number of complete self-play games to simulate during a new iteration.
+    'tempThreshold': 15,        #
+    'updateThreshold': 0.6,     # During arena playoff, new neural net will be accepted if threshold or more of games are won.
+    'maxlenOfQueue': 200000,    # Number of game examples to train the neural networks.
+    'numMCTSSims': 25,          # Number of games moves for MCTS to simulate.
+    'arenaCompare': 40,         # Number of games to play during arena play to determine if new net will be accepted.
+    'cpuct': 1,
+
+    'checkpoint': './temp/',
+    'load_model': False,
+    'load_folder_file': ('/dev/models/8x100x50','best.pth.tar'),
+    'numItersForTrainExamplesHistory': 20,
+})
 
 class Gui:
     def on_closing(self):
@@ -17,7 +37,7 @@ class Gui:
             self.game_state.calc_final_score()
             self.game_state.print_score()
 
-    def __init__(self):
+    def __init__(self, game):
         self.canvas_width = 1800
         self.canvas_height = 1020
         self.tile_size = 60
@@ -50,6 +70,14 @@ class Gui:
         self.input_available_meeple_placements_imgs = []
         self.game_state = None
 
+        ##
+        # ML - HAX
+        if 0:
+            self.game = game
+            self.n1 = nn(self.game)
+            self.n1.load_checkpoint(folder=args.checkpoint, filename='temp.pth.tar')
+            self.n1mcts = MCTS(self.game, self.n1, args)
+            self.current_V = 0
     ##
     # Generate gif animations
     def save_canvas_img(self):
@@ -63,8 +91,8 @@ class Gui:
                                      duration=500, loop=0)
 
     def __pixels_to_coords(self, x, y):
-        return Coords((y - self.center_y) // self.tile_size,
-                      (x - self.center_x) // self.tile_size)
+        return Coords(int((y - self.center_y) // self.tile_size),
+                      int((x - self.center_x) // self.tile_size))
 
     def callback_input_tile_placement_next(self, event=None):
         if self.input_selected_tile_placement_coord:
@@ -120,6 +148,10 @@ class Gui:
     def callback_input_meeple_placement_next(self, event=None):
         print("Meeple Callback - Next")
         placement = self.input_available_tile_placements[self.input_selected_meeple_placement]
+        print("Inserting")
+        print(self.input_selected_tile_placement_coord)
+        print(self.input_selected_tile_placement_rotation)
+        print(placement)
         self.game_state.insert_tile(self.input_selected_tile_placement_coord, self.input_selected_tile,
                                     self.input_selected_tile_placement_rotation, placement)
         self.ask_new_tile_placement()
@@ -159,20 +191,32 @@ class Gui:
         self.canvas.bind("<Button-2>", lambda e: self.callback_input_meeple_placement_next(e))
 
     def play_ai_random(self):
-        tile_placements = []
-        while len(tile_placements) == 0:
-            if len(self.game_state.deck) == 0:
+        if 0:
+            tile_placements = []
+            while len(tile_placements) == 0:
+                if len(self.game_state.deck) == 0:
+                    return self.on_closing()
+                tile: Tile = self.game_state.deck.pop()
+                tile_placements = self.game_state.get_available_tile_placements(tile)
+            print("RANDOM_PLAY")
+            print(f"PLAYER: {self.game_state.current_player}")
+            random.shuffle(tile_placements)
+            coords, rotation = tile_placements[0]
+            meeple_placements = self.game_state.get_available_meeple_placements(tile, coords, rotation)
+            random.shuffle(meeple_placements)
+            meeple_placement = meeple_placements[0] if len(meeple_placements) > 0 else None
+            self.game_state.insert_tile(coords, tile, rotation, meeple_placement)
+        else:
+            tile = self.game_state.get_new_tile()
+            if not tile:
                 return self.on_closing()
-            tile: Tile = self.game_state.deck.pop()
-            tile_placements = self.game_state.get_available_tile_placements(tile)
-        print("RANDOM_PLAY")
-        print(f"PLAYER: {self.game_state.current_player}")
-        random.shuffle(tile_placements)
-        coords, rotation = tile_placements[0]
-        meeple_placements = self.game_state.get_available_meeple_placements(tile, coords, rotation)
-        random.shuffle(meeple_placements)
-        meeple_placement = meeple_placements[0] if len(meeple_placements) > 0 else None
-        self.game_state.insert_tile(coords, tile, rotation, meeple_placement)
+
+            canonical = self.game.getCanonicalForm(self.game_state, -1)
+            action_id = np.argmax(self.n1mcts.getActionProb(canonical, temp=0))
+            print("ML Action ID")
+            print(action_id)
+            self.game_state, curPlayer = self.game.getNextState(self.game_state, -1, action_id)
+            _, self.current_V = self.n1.predict(self.game_state.ml_get_board(), self.game_state.ml_get_aux())
 
     def ask_new_tile_placement(self):
         if self.game_state.current_player == 1:
@@ -180,14 +224,11 @@ class Gui:
         print(f"USER_PLAY")
         print(f"PLAYER: {self.game_state.current_player}")
 
-        while True:
-            if len(self.game_state.deck) == 0:
-                return self.on_closing()
-            tile: Tile = self.game_state.deck.pop()
-            tile_placements = self.game_state.get_available_tile_placements(tile)
-            self.input_selected_tile = tile
-            if len(tile_placements):
-                break
+        tile = self.game_state.get_new_tile()
+        if not tile:
+            return self.on_closing()
+        tile_placements = self.game_state.get_available_tile_placements(tile)
+        self.input_selected_tile = tile
 
         self.draw_game_state(self.game_state, False)
         self.__draw_tile(Coords(-8, -12), tile)
@@ -222,7 +263,8 @@ class Gui:
                                     anchor=NW, fill='blue')
         self.canvas.create_text((0, 60), text=f"Deck size : {len(game_state.deck)}",
                                 anchor=NW, fill='blue')
-
+        self.canvas.create_text((0, 80), text=f"V         : {self.current_V}",
+                                anchor=NW, fill='blue')
         for coords in game_state.board.board.keys():
             tile = game_state.board[coords]
             self.__draw_tile(coords, tile)

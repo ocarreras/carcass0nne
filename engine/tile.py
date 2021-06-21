@@ -32,6 +32,51 @@ class Tile:
         self.coords = 0
         self.rotations = rotations
 
+    ##
+    # </ ML
+    def tile_num(self):
+        return ord(self.tile_type[0])-65
+
+    def placement_ind(self, placement):
+        if not placement:
+            return 0
+        if type(placement) == RoadPlacement:
+            return 1 + self.placements[ShapeType.ROAD].index(placement)
+        elif type(placement) == FieldPlacement:
+            return 5 + self.placements[ShapeType.FIELD].index(placement)
+        elif type(placement) == CityPlacement:
+            return 9 + self.placements[ShapeType.CITY].index(placement)
+        elif type(placement) == MonasteryPlacement:
+            return 13
+        return -1
+
+    def get_placement_by_ind(self, placement_ind):
+        assert 13 >= placement_ind >= 0
+        if placement_ind == 13:
+            return self.placements[ShapeType.MONASTERY][0]
+        elif placement_ind >= 9:
+            return self.placements[ShapeType.CITY][placement_ind-9]
+        elif placement_ind >= 5:
+            return self.placements[ShapeType.FIELD][placement_ind-5]
+        elif placement_ind >= 1:
+            return self.placements[ShapeType.ROAD][placement_ind-1]
+        return None
+
+    ##
+    # End ML />
+
+    def meeple_repr(self):
+        meeple_repr = 0
+        for ind1, shape_type in enumerate(ShapeType):
+            for ind2, placement in enumerate(self.placements[shape_type]):
+                placement: Placement
+                if placement.meeple is not None:
+                    meeple_repr = (ind1*4 + ind2) * (1 if placement.meeple == 0 else -1)
+                    break
+            if meeple_repr:
+                break
+        return meeple_repr
+
     def copy(self):
         my_copy = Tile()
         my_copy.borders = self.borders.copy()
@@ -39,7 +84,8 @@ class Tile:
         for placement_type in self.placements:
             my_copy.placements[placement_type] = []
             for placement in self.placements[placement_type]:
-                my_copy.placements[placement_type].append(placement.copy())
+                placement_copy = placement.copy()
+                my_copy.placements[placement_type].append(placement_copy)
         my_copy.tile_type = self.tile_type
         my_copy.rotation = self.rotation
         my_copy.coords = self.coords
@@ -91,4 +137,4 @@ class Tile:
         return self.borders[(orientation - self.rotation) % 4]
 
     def __str__(self):
-        return f"Tile: {self.tile_type} R:{self.rotation}"
+        return f"TILE: {self.tile_type} {hex(id(self))}  R:{self.rotation}"

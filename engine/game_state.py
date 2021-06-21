@@ -10,10 +10,12 @@ from engine.placement import EdgeConnection, Placement, ShapeType
 from engine.board import Board
 
 import random
+import numpy as np
 
+import copy
 
 class GameState:
-    def __init__(self, n_players, debug=0):
+    def __init__(self, n_players, tile_counts=base_deck.tile_counts, debug=0):
         self.n_players = n_players
         self.current_player = 0
         self.deck: [Tile] = None
@@ -23,27 +25,64 @@ class GameState:
         self.meeples: [int] = None
         self.unfinished_shapes: Dict[ShapeType, list] = None
         self.debug_level = debug
-        self.initialize()
+        self.canonical_player = 1
+        self.tile_counts = tile_counts
+        self.ML_AUX_SIZE = 5
+        self.next_tile: Tile = None
+        self.past_actions = []
+        self.initialize(tile_counts)
 
+
+    ##
+    # TODO: This method is a totall disaster
+    #
     def copy(self):
-        my_copy = GameState(self.n_players)
+        return copy.deepcopy(self)
+
+        # print("Copying w history")
+        # print(self.past_actions)
+        my_copy = GameState(self.n_players, self.tile_counts)
         my_copy.current_player = self.current_player
         my_copy.deck = []
         for tile in self.deck:
             my_copy.deck.append(tile.copy())
+
+        for key in my_copy.board.board:
+            copy_tile: Tile = my_copy.board[key]
+            for shape_type in ShapeType:
+                for copy_placement in copy_tile.placements[shape_type]:
+                    copy_placement: Placement
+                    copy_placement.connected_placement = my_copy.board[key].get_pl
+
+        ##
+        # !!!!!
+        # TODO:
+        #          Board should have nwe references
+        #          placement.shape_placement should have new refs too.
         my_copy.board = self.board.copy()
-        my_copy.score_types = self.score_types.copy()
+        my_copy.score_types = {}
+        for score_type in self.score_types:
+            my_copy.score_types[score_type] = self.score_types[score_type].copy()
+        self.score_types.copy()
         my_copy.meeples = self.meeples.copy()
         my_copy.unfinished_shapes = {}
+        ##
+        # TODO: Uuuuultra pastitche per fer un test
         for shape_type in self.unfinished_shapes:
             my_copy.unfinished_shapes[shape_type] = []
-            for shape in self.unfinished_shapes[shape_type]:
-                print("COPY SHAPE")
-                my_copy.unfinished_shapes[shape_type] = self.unfinished_shapes[shape_type]
+            for placement in self.unfinished_shapes[shape_type]:
+                placement: Placement
+                tile_copy: Tile = my_copy.board[placement.coords]
+                tile_self: Tile = self.board[placement.coords]
+                placement_copy = tile_copy.get_placement_by_ind(tile_self.placement_ind(placement))
+                my_copy.unfinished_shapes[shape_type].append(placement_copy)
+
         my_copy.debug_level = self.debug_level
+        my_copy.next_tile = self.next_tile
+        my_copy.past_actions = self.past_actions.copy()
         return my_copy
 
-    def initialize(self):
+    def initialize(self, tile_counts=base_deck.tile_counts):
         self.scores = [0 for _ in range(self.n_players)]
         self.score_types = {}
         for shape_type in ShapeType:
@@ -59,9 +98,9 @@ class GameState:
         # Deck initialization
         self.deck = []
         for tile_type in base_deck.tile_counts:
-            # We need to dup licate all objects to avoid multiple references.
+            # We need to duplicate all objects to avoid multiple references.
             self.deck.extend([base_deck.tile_types[tile_type].copy()
-                              for _ in range(base_deck.tile_counts[tile_type])])
+                              for _ in range(tile_counts[tile_type])])
         random.shuffle(self.deck)
 
         # Inserting first tile and initializing board
@@ -72,6 +111,63 @@ class GameState:
         self.__insert_and_merge_shapes(ShapeType.CITY, initial_tile, initial_tile.coords)
         self.__insert_and_merge_shapes(ShapeType.ROAD, initial_tile, initial_tile.coords)
         self.__insert_and_merge_shapes(ShapeType.FIELD, initial_tile, initial_tile.coords)
+        self.get_new_tile()
+
+    def ml_get_aux(self):
+        aux = np.zeros(self.ML_AUX_SIZE)
+        if self.canonical_player == -1:
+            aux[0:2] = self.scores[::-1]
+            aux[2:4] = self.meeples[::-1]
+        else:
+            aux[0:2] = self.scores
+            aux[2:4] = self.meeples
+        aux[4] = (self.next_tile.tile_num() if self.next_tile else 0)
+        return aux
+
+    def ml_get_board(self):
+        return self.board.ml_board
+
+    ##
+    # TODO: Finish this, just placeholder
+    def ml_get_action_id(self, tile, coords, rotation, meeple_placement):
+        move_ind = tile.placement_ind(meeple_placement)
+        move_ind += rotation * self.board.ML_BOARD_FEATURES
+        move_ind += (coords.x + self.board.ML_BOARD_SIZE//2) * 4 * self.board.ML_BOARD_FEATURES
+        move_ind += (coords.y + self.board.ML_BOARD_SIZE//2) * 4 * self.board.ML_BOARD_FEATURES * self.board.ML_BOARD_SIZE
+        return move_ind
+
+    def ml_get_action_params(self, action_id):
+        mult = self.board.ML_BOARD_SIZE * self.board.ML_BOARD_FEATURES * 4
+        coord_y = action_id // mult
+        action_id = action_id - (coord_y*mult)
+        mult /= self.board.ML_BOARD_SIZE
+        coord_x = action_id // mult
+        action_id = action_id - (coord_x*mult)
+        mult /= 4
+        rotation = action_id // mult
+        placement_id = action_id - (rotation*mult)
+        return int(coord_y) - self.board.ML_BOARD_SIZE//2, int(coord_x) - self.board.ML_BOARD_SIZE//2, \
+               int(rotation), int(placement_id)
+
+    def ml_action(self, action_id):
+
+        coord_y, coord_x, ml_rotation, placement_id = self.ml_get_action_params(action_id)
+        self.past_actions.append([self.next_tile.tile_num(), coord_y, coord_x, ml_rotation, placement_id])
+        # print("Past")
+        # for action in self.past_actions:
+        #    print(action)
+        ml_coords = Coords(coord_y, coord_x)
+        ml_placement = self.next_tile.get_placement_by_ind(placement_id)
+        self.insert_tile(ml_coords, self.next_tile, ml_rotation, ml_placement)
+
+    def get_new_tile(self):
+        while True:
+            if len(self.deck) == 0:
+                self.next_tile = None
+                return None
+            self.next_tile = self.deck.pop()
+            if len(self.get_available_tile_placements(self.next_tile)):
+                return self.next_tile
 
     def calc_final_score(self):
         for shape_type in ShapeType:
@@ -116,7 +212,7 @@ class GameState:
         for shape_placement in placement.shape_placements:
             if shape_placement.meeple is not None:
                 self.meeples[shape_placement.meeple] += 1
-                shape_placement.meeple = None
+                self.__remove_meeple(shape_placement)
         placement.reset_meeples(self.n_players)
         if self.debug_level > 4:
             print(f"REMOVE SHAPE @ SCORE :: {shape_type} :: {placement}")
@@ -149,8 +245,6 @@ class GameState:
             for placement in self.unfinished_shapes[shape_type]:
                 print(f"\t{placement}")
 
-
-
     def __update_monasteries(self, tile: Tile, coords: Coords):
         for monastery in self.unfinished_shapes[ShapeType.MONASTERY]:
             monastery_coords = monastery.coords
@@ -172,8 +266,30 @@ class GameState:
         self.meeples[self.current_player] -= 1
         placement.meeple = self.current_player
         placement.meeples[self.current_player] += 1
+        ##
+        # ML-Board state
+        m_ind = tile.placement_ind(placement)
+        assert m_ind != -1
+        if m_ind:
+            ml_player = (-1) ** self.current_player
+            self.board.insert_meeple_ml(tile.coords, m_ind, ml_player)
+
+    def __remove_meeple(self, placement: Placement):
+        placement.meeple = None
+        ##
+        # ML-Board state
+        # TODO - This should be done better but would require changes on the models
+        tile = self.board[placement.coords]
+        m_ind = tile.placement_ind(placement)
+        assert m_ind != -1 and m_ind != 0
+        self.board.remove_meeple_ml(placement.coords, m_ind)
 
     def insert_tile(self, coords: Coords, tile: Tile, rotation: int, placement: Placement):
+        assert self.next_tile == tile
+        assert coords not in self.board
+
+        self.next_tile = None
+
         if self.debug_level > 0:
             print(f"(\"{tile.tile_type}\", ({coords.y}, {coords.x}), {rotation}),")
 
