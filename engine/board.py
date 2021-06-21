@@ -9,7 +9,7 @@ import numpy as np
 
 ##
 # TODO: Refactor this
-BOARD_LENGTH = 6
+BOARD_LENGTH = 3
 ML_BOARD_FEATURES = 4 + 13
 ML_BOARD_SIZE = 2 * BOARD_LENGTH + 1
 
@@ -44,6 +44,14 @@ class Board(MutableMapping):
         self.ml_board_s1[-initial_coords.y+BOARD_LENGTH][initial_coords.x+BOARD_LENGTH][0] = first_tile.tile_num()
         self.ml_board_s2[initial_coords.y+BOARD_LENGTH][-initial_coords.x+BOARD_LENGTH][0] = first_tile.tile_num()
         self.ml_board_s3[-initial_coords.y+BOARD_LENGTH][-initial_coords.x+BOARD_LENGTH][0] = first_tile.tile_num()
+
+    def print(self):
+        print("TILE BOARD>>")
+        for y in range(self.ML_BOARD_SIZE):
+            st = ""
+            for x in range(self.ML_BOARD_SIZE):
+                st += f"{int(self.ml_board_s0[y][x][0])}{int(self.ml_board_s0[y][x][1])}{int(self.ml_board_s0[y][x][2])}{int(self.ml_board_s0[y][x][3])} "
+            print(st)
 
     def copy(self):
         my_copy = Board()

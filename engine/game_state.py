@@ -24,7 +24,7 @@ class GameState:
         self.score_types: Dict[ShapeType, Dict[int, int]] = None
         self.meeples: [int] = None
         self.unfinished_shapes: Dict[ShapeType, list] = None
-        self.debug_level = debug
+        self.debug_level = 0
         self.canonical_player = 1
         self.tile_counts = tile_counts
         self.ML_AUX_SIZE = 5
@@ -177,6 +177,8 @@ class GameState:
         self.insert_tile(ml_coords, self.next_tile, ml_rotation, ml_placement)
 
     def get_new_tile(self):
+        if self.next_tile:
+            return self.next_tile
         while True:
             if len(self.deck) == 0:
                 self.next_tile = None
@@ -210,7 +212,6 @@ class GameState:
         placements = [None]
         if self.meeples[self.current_player] == 0:
             return placements
-
         placements.extend(self.__get_city_meeple_placements(tile, coords, rotation))
         placements.extend(tile.placements[ShapeType.MONASTERY])
         placements.extend(self.__get_road_meeple_placements(tile, coords, rotation))

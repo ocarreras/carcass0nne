@@ -1,7 +1,7 @@
 from engine.game_state import GameState
 from engine.game_ui import Gui
 from engine.tile import Tile
-from engine.board import Board, ML_BOARD_SIZE
+from engine.board import Board, ML_BOARD_SIZE, ML_BOARD_FEATURES
 import hashlib
 
 import numpy as np
@@ -49,15 +49,15 @@ class   Game:
 
         reduced_tile_counts = {
             "A": 2,
-            "B": 2,
+            "B": 0,
             "C": 0,
             "D": 2,
-            "E": 2,
-            "F": 2,
-            "G": 2,
-            "H": 2,
-            "I": 2,
-            "J": 2,
+            "E": 0,
+            "F": 0,
+            "G": 0,
+            "H": 0,
+            "I": 0,
+            "J": 0,
             "K": 0,
             "L": 0,
             "M": 0,
@@ -110,22 +110,25 @@ class   Game:
     def getInitBoard(self):
         return self.start()
 
+    # return 0 if not ended, 1 if player 1 won, -1 if player 1 lost
     def getGameEnded(self, state: GameState, curPlayer):
         # print("getGameEnded")
         if len(state.deck) != 0 or state.next_tile is not None:
             return 0
         state.calc_final_score()
+
         if state.scores[0] == state.scores[1]:
-            return -1e-6
-        #if state.canonical_player * (state.scores[0] > state.scores[1]):
-        # TODO: How should canonicalBoard affect here
+            return 1e-4
+
         if curPlayer*(state.scores[0] > state.scores[1]):
+            # print(f"GAME ENDED  1 | {state.canonical_player}")
             return 1 * state.canonical_player
         else:
+            # print(f"GAME ENDED -1 | {state.canonical_player}")
             return -1 * state.canonical_player
 
     def stringRepresentation(self, state: GameState):
-        my_str =  hashlib.sha256(state.board.ml_board_s0.tostring()).hexdigest()
+        my_str = hashlib.sha256(state.board.ml_board_s0.tostring()).hexdigest()
         next_tile: Tile = state.next_tile
         # Current tile needs to be encoded on state, otherwise we mess up the tree
         # as the valid actions are tied to tile
@@ -135,16 +138,21 @@ class   Game:
         return Board.getActionSize()
 
     def getSymmetries(self, canonicalBoard: GameState, pi):
-        sym0 = np.concatenate((canonicalBoard.board.ml_board_s0[0:4], canonicalBoard.board.ml_board_s0[4:] *
-                              canonicalBoard.canonical_player))
-        sym1 = np.concatenate((canonicalBoard.board.ml_board_s1[0:4], canonicalBoard.board.ml_board_s1[4:] *
-                               canonicalBoard.canonical_player))
-        sym2 = np.concatenate((canonicalBoard.board.ml_board_s2[0:4], canonicalBoard.board.ml_board_s2[4:] *
-                               canonicalBoard.canonical_player))
-        sym3 = np.concatenate((canonicalBoard.board.ml_board_s3[0:4], canonicalBoard.board.ml_board_s3[4:] *
-                               canonicalBoard.canonical_player))
-        return [(sym0, canonicalBoard.ml_get_aux(), pi), (sym1, canonicalBoard.ml_get_aux(), pi),
-                (sym2, canonicalBoard.ml_get_aux(), pi), (sym3, canonicalBoard.ml_get_aux(), pi)]
+        # canonicalBoard.board.print()
+        Mc = np.ones((ML_BOARD_SIZE, ML_BOARD_SIZE, ML_BOARD_FEATURES)) * canonicalBoard.canonical_player
+        for x in range(ML_BOARD_SIZE):
+            for y in range(ML_BOARD_SIZE):
+                Mc[x, y][0:4] = 1
+        sym0 = Mc * canonicalBoard.board.ml_board_s0
+        sym1 = Mc * canonicalBoard.board.ml_board_s1
+        sym2 = Mc * canonicalBoard.board.ml_board_s2
+        sym3 = Mc * canonicalBoard.board.ml_board_s3
+
+        # Rotating the action space doesn't look easy at firs sight
+
+        return [(sym0, canonicalBoard.ml_get_aux(), pi)]
+        #return [(sym0, canonicalBoard.ml_get_aux(), pi), (sym1, canonicalBoard.ml_get_aux(), pi),
+        #        (sym2, canonicalBoard.ml_get_aux(), pi), (sym3, canonicalBoard.ml_get_aux(), pi)]
 
     ##
     # TODO:
@@ -171,6 +179,7 @@ class   Game:
                 print(f"Valid move: {coords}, {rotation}, {meeple_placement}")
                 print(f"        ID: {move_id}")
             valids[move_id] = 1
+
         return np.array(valids)
 
     ####################################################################################################################
@@ -187,7 +196,6 @@ class   Game:
         if action == self.getActionSize() - 1:
             print("Invalid action thingie")
             return (next_state, -cur_player)
-
         next_state.ml_action(action)
 
         ##
