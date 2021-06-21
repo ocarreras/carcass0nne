@@ -32,49 +32,65 @@ class GameState:
         self.past_actions = []
         self.initialize(tile_counts)
 
+    def __get_copied_placement(self, my_copy, self_placement):
+        if self_placement is None:
+            return None
+        copy_tile: Tile = my_copy.board[self_placement.coords]
+        self_tile: Tile = self.board[self_placement.coords]
+        return copy_tile.get_placement_by_ind(self_tile.placement_ind(self_placement))
 
     ##
-    # TODO: This method is a totall disaster
+    # TODO: This method is a total disaster, rethink it.
     #
     def copy(self):
+        # Workaround until fix
         return copy.deepcopy(self)
-
-        # print("Copying w history")
-        # print(self.past_actions)
-        my_copy = GameState(self.n_players, self.tile_counts)
+        my_copy: GameState = GameState(self.n_players, self.tile_counts)
         my_copy.current_player = self.current_player
         my_copy.deck = []
         for tile in self.deck:
             my_copy.deck.append(tile.copy())
 
+        ##
+        # TODO: The horror ...
+        my_copy.board = self.board.copy()
         for key in my_copy.board.board:
             copy_tile: Tile = my_copy.board[key]
+            self_tile: Tile = self.board[key]
+
             for shape_type in ShapeType:
                 for copy_placement in copy_tile.placements[shape_type]:
-                    copy_placement: Placement
-                    copy_placement.connected_placement = my_copy.board[key].get_pl
+                    connected_placement: Placement = copy_placement.connected_placement
+                    new_connected_placement = self.__get_copied_placement(my_copy, connected_placement)
+                    copy_placement.connected_placement = new_connected_placement
+                    new_shape_placements = []
+                    for old_shape_placement in copy_placement.shape_placements:
+                        new_shape_placement = self.__get_copied_placement(my_copy, old_shape_placement)
+                        new_shape_placements.append(new_shape_placement)
+                    copy_placement.shape_placements = new_shape_placements
 
-        ##
-        # !!!!!
-        # TODO:
-        #          Board should have nwe references
-        #          placement.shape_placement should have new refs too.
-        my_copy.board = self.board.copy()
+            copy_tile.connections = {}
+            for shape_type in self_tile.connections:
+                copy_tile.connections[shape_type] = {}
+                for connection in self_tile.connections[shape_type]:
+                    new_placement = self.__get_copied_placement(my_copy, self_tile.connections[shape_type][connection])
+                    copy_tile.connections[shape_type][connection] = new_placement
+
+
         my_copy.score_types = {}
         for score_type in self.score_types:
             my_copy.score_types[score_type] = self.score_types[score_type].copy()
         self.score_types.copy()
+
+        my_copy.scores = self.scores.copy()
         my_copy.meeples = self.meeples.copy()
         my_copy.unfinished_shapes = {}
         ##
-        # TODO: Uuuuultra pastitche per fer un test
+        # TODO: Horror
         for shape_type in self.unfinished_shapes:
             my_copy.unfinished_shapes[shape_type] = []
             for placement in self.unfinished_shapes[shape_type]:
-                placement: Placement
-                tile_copy: Tile = my_copy.board[placement.coords]
-                tile_self: Tile = self.board[placement.coords]
-                placement_copy = tile_copy.get_placement_by_ind(tile_self.placement_ind(placement))
+                placement_copy = self.__get_copied_placement(my_copy, placement)
                 my_copy.unfinished_shapes[shape_type].append(placement_copy)
 
         my_copy.debug_level = self.debug_level
@@ -125,7 +141,7 @@ class GameState:
         return aux
 
     def ml_get_board(self):
-        return self.board.ml_board
+        return self.board.ml_board_s0
 
     ##
     # TODO: Finish this, just placeholder

@@ -57,9 +57,9 @@ class   Game:
             "G": 2,
             "H": 2,
             "I": 2,
-            "J": 0,
+            "J": 2,
             "K": 0,
-            "L": 2,
+            "L": 0,
             "M": 0,
             "N": 0,
             "O": 0,
@@ -120,12 +120,12 @@ class   Game:
         #if state.canonical_player * (state.scores[0] > state.scores[1]):
         # TODO: How should canonicalBoard affect here
         if curPlayer*(state.scores[0] > state.scores[1]):
-            return 1
+            return 1 * state.canonical_player
         else:
-            return -1
+            return -1 * state.canonical_player
 
     def stringRepresentation(self, state: GameState):
-        my_str =  hashlib.sha256(state.board.ml_board.tostring()).hexdigest()
+        my_str =  hashlib.sha256(state.board.ml_board_s0.tostring()).hexdigest()
         next_tile: Tile = state.next_tile
         # Current tile needs to be encoded on state, otherwise we mess up the tree
         # as the valid actions are tied to tile
@@ -135,12 +135,16 @@ class   Game:
         return Board.getActionSize()
 
     def getSymmetries(self, canonicalBoard: GameState, pi):
-        #print("getSymmetries")
-        ##
-        # TODO: canonicalBoard should only multiply [1:] as the first layer is the tile layer
-        sym = np.concatenate(([canonicalBoard.board.ml_board[0]], canonicalBoard.board.ml_board[1:] *
+        sym0 = np.concatenate((canonicalBoard.board.ml_board_s0[0:4], canonicalBoard.board.ml_board_s0[4:] *
                               canonicalBoard.canonical_player))
-        return [(sym, canonicalBoard.ml_get_aux(), pi)]
+        sym1 = np.concatenate((canonicalBoard.board.ml_board_s1[0:4], canonicalBoard.board.ml_board_s1[4:] *
+                               canonicalBoard.canonical_player))
+        sym2 = np.concatenate((canonicalBoard.board.ml_board_s2[0:4], canonicalBoard.board.ml_board_s2[4:] *
+                               canonicalBoard.canonical_player))
+        sym3 = np.concatenate((canonicalBoard.board.ml_board_s3[0:4], canonicalBoard.board.ml_board_s3[4:] *
+                               canonicalBoard.canonical_player))
+        return [(sym0, canonicalBoard.ml_get_aux(), pi), (sym1, canonicalBoard.ml_get_aux(), pi),
+                (sym2, canonicalBoard.ml_get_aux(), pi), (sym3, canonicalBoard.ml_get_aux(), pi)]
 
     ##
     # TODO:
@@ -173,12 +177,10 @@ class   Game:
     ####################################################################################################################
     # On progress
     def getNextState(self, state: GameState, cur_player: int, action: int):
-        #print("getNextState")
         state_cur_player = (-1) ** state.current_player
-        ##
-        # TODO: This doesn't work, why ?
-        #       Sanity check
-        #       assert state_cur_player == cur_player
+
+        ## TODO: assert cur_player == state_cur_player * state.canonical_player
+        ## print(f"getNextState {cur_player} -- {state_cur_player} || {state.canonical_player}")
 
         next_state: GameState = state.copy()
 

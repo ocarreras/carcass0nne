@@ -67,7 +67,7 @@ class Arena():
                 coord_y, coord_x, ml_rotation, placement_id = board.ml_get_action_params(action)
                 placement = board.next_tile.get_placement_by_ind(placement_id)
                 print(placement)
-
+                board.board.print()
                 gui.tk_root.mainloop()
                 assert valids[action] > 0
                 ##
@@ -96,24 +96,25 @@ class Arena():
         draws = 0
         for _ in tqdm(range(num), desc="Arena.playGames (1)"):
             gameResult = self.playGame(verbose=verbose)
-            print(gameResult)
+            print(gameResult, twoWon)
             if gameResult == 1:
                 oneWon += 1
             elif gameResult == -1:
                 twoWon += 1
             else:
                 draws += 1
+            print(gameResult, twoWon)
 
         self.player1, self.player2 = self.player2, self.player1
 
         for _ in tqdm(range(num), desc="Arena.playGames (2)"):
             gameResult = self.playGame(verbose=verbose)
-            print(gameResult)
             if gameResult == -1:
                 oneWon += 1
             elif gameResult == 1:
                 twoWon += 1
             else:
                 draws += 1
+            print(gameResult, oneWon)
 
         return oneWon, twoWon, draws

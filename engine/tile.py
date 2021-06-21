@@ -34,6 +34,21 @@ class Tile:
 
     ##
     # </ ML
+    def copy(self):
+        my_copy = Tile()
+        my_copy.borders = self.borders.copy()
+        my_copy.placements = {}
+        for placement_type in self.placements:
+            my_copy.placements[placement_type] = []
+            for placement in self.placements[placement_type]:
+                placement_copy = placement.copy()
+                my_copy.placements[placement_type].append(placement_copy)
+        my_copy.tile_type = self.tile_type
+        my_copy.rotation = self.rotation
+        my_copy.coords = self.coords
+        my_copy.rotations = self.rotations
+        return my_copy
+
     def tile_num(self):
         return ord(self.tile_type[0])-65
 
@@ -76,21 +91,6 @@ class Tile:
             if meeple_repr:
                 break
         return meeple_repr
-
-    def copy(self):
-        my_copy = Tile()
-        my_copy.borders = self.borders.copy()
-        my_copy.placements = {}
-        for placement_type in self.placements:
-            my_copy.placements[placement_type] = []
-            for placement in self.placements[placement_type]:
-                placement_copy = placement.copy()
-                my_copy.placements[placement_type].append(placement_copy)
-        my_copy.tile_type = self.tile_type
-        my_copy.rotation = self.rotation
-        my_copy.coords = self.coords
-        my_copy.rotations = self.rotations
-        return my_copy
 
     # Place tile at coords/rotation, initialize all placements.
     def place(self, board, coords: Coords, rotation: int, n_players: int):

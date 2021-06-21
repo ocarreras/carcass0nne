@@ -24,6 +24,26 @@ class Placement:
         self.meeples = None
         self.coords = None
 
+
+    def copy(self):
+        my_copy: Placement = Placement()
+        my_copy.meeple_xy = self.meeple_xy.copy()
+        ##
+        # TODO:
+        #   This needs to be fixed at state copy, this is a total and absolute mess that will need redesign to
+        #   proper fix
+        my_copy.connections = self.connections.copy()
+        my_copy.connected_placement = self.connected_placement
+        my_copy.shape_placements = self.shape_placements.copy()
+
+        my_copy.meeple = self.meeple
+        my_copy.shape = self.shape
+        my_copy.completed = self.completed
+        my_copy.open_edges = self.open_edges.copy()
+        if self.meeples:
+            my_copy.meeples = self.meeples.copy()
+        my_copy.coords = self.coords
+        return my_copy
     def initialize_rotation(self, rotation: int):
         self.connections = list(map(lambda c: EdgeConnection((c + rotation * 2) % 8), self.connections))
 
@@ -34,22 +54,6 @@ class Placement:
         self.shape_placements = [self]
         self.meeples = [0 for _ in range(n_players)]
         self.connected_placement = self
-
-    def copy(self):
-        my_copy: Placement = Placement()
-        my_copy.meeple_xy = self.meeple_xy.copy()
-        my_copy.connections = self.connections.copy()
-        my_copy.meeple = self.meeple
-        my_copy.shape = self.shape
-        my_copy.completed = self.completed
-
-        my_copy.connected_placement = self.connected_placement
-        my_copy.shape_placements = self.shape_placements.copy()
-        my_copy.open_edges = self.open_edges.copy()
-        if self.meeples:
-            my_copy.meeples = self.meeples.copy()
-        my_copy.coords = self.coords
-        return my_copy
 
     def winners(self):
         max_meeples = max(self.meeples)

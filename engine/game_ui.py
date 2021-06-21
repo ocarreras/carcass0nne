@@ -21,8 +21,7 @@ args = dotdict({
     'numMCTSSims': 25,          # Number of games moves for MCTS to simulate.
     'arenaCompare': 40,         # Number of games to play during arena play to determine if new net will be accepted.
     'cpuct': 1,
-
-    'checkpoint': './temp/',
+    'checkpoint': './temp3/',
     'load_model': False,
     'load_folder_file': ('/dev/models/8x100x50','best.pth.tar'),
     'numItersForTrainExamplesHistory': 20,
@@ -72,12 +71,13 @@ class Gui:
 
         ##
         # ML - HAX
-        if 0:
+        if 1:
             self.game = game
             self.n1 = nn(self.game)
             self.n1.load_checkpoint(folder=args.checkpoint, filename='temp.pth.tar')
             self.n1mcts = MCTS(self.game, self.n1, args)
-            self.current_V = 0
+        self.current_V = 0
+
     ##
     # Generate gif animations
     def save_canvas_img(self):
