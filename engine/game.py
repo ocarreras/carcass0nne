@@ -122,10 +122,10 @@ class   Game:
 
         if curPlayer*(state.scores[0] > state.scores[1]):
             # print(f"GAME ENDED  1 | {state.canonical_player}")
-            return 1 * state.canonical_player
+            return 1 
         else:
             # print(f"GAME ENDED -1 | {state.canonical_player}")
-            return -1 * state.canonical_player
+            return -1
 
     def stringRepresentation(self, state: GameState):
         my_str = hashlib.sha256(state.board.ml_board_s0.tostring()).hexdigest()
